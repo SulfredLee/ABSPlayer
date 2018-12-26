@@ -15,6 +15,7 @@ class fileDownloader : public linuxThread, public cmdReceiver
     ~fileDownloader();
 
     void InitComponent(cmdReceiver* manager);
+    void DeinitComponent();
     // override
     void UpdateCMDReceiver(PlayerMsg_Base*& msg);
  private:

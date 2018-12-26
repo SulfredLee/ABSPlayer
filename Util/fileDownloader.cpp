@@ -18,6 +18,11 @@ void fileDownloader::InitComponent(cmdReceiver* manager)
     startThread();
 }
 
+void fileDownloader::DeinitComponent()
+{
+    m_manager = NULL;
+}
+
 size_t fileDownloader::WriteFunction(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;

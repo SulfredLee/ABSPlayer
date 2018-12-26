@@ -10,10 +10,10 @@ mplayerManager::mplayerManager()
 
 mplayerManager::~mplayerManager()
 {
-    m_mpdDownloader.InitComponent(NULL);
-    m_videoDownloader.InitComponent(NULL);
-    m_audioDownloader.InitComponent(NULL);
-    m_subtitleDownloader.InitComponent(NULL);
+    m_mpdDownloader.DeinitComponent();
+    m_videoDownloader.DeinitComponent();
+    m_audioDownloader.DeinitComponent();
+    m_subtitleDownloader.DeinitComponent();
     stopThread();
 }
 
