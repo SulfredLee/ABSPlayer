@@ -5,6 +5,7 @@
 enum PlayerMsg_Type
 {
     PlayerMsg_Type_Base,
+    PlayerMsg_Type_Dummy,
     PlayerMsg_Type_Open,
     PlayerMsg_Type_Play,
     PlayerMsg_Type_Pause,

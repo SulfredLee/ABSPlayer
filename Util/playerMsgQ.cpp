@@ -18,7 +18,7 @@ void playerMsgQ::InitComponent(int totalMsgSizeLimit)
     m_totalMsgSizeLimit = totalMsgSizeLimit;
 }
 
-bool playerMsgQ::AddMsg(PlayerMsg_Base*& msg)
+bool playerMsgQ::AddMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     DefaultLock lock(&m_mutex);
     bool ret = false;
@@ -27,14 +27,13 @@ bool playerMsgQ::AddMsg(PlayerMsg_Base*& msg)
     else
     {
         m_msgQ.push(msg);
-        msg = NULL;
         pthread_cond_signal(&m_cond);
         ret = true;
     }
     return ret;
 }
 
-void playerMsgQ::GetMsg(PlayerMsg_Base*& msg)
+void playerMsgQ::GetMsg(std::shared_ptr<PlayerMsg_Base>& msg)
 {
     pthread_mutex_lock(m_mutex.GetMutex());
     while (m_msgQ.size() == 0)

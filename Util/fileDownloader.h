@@ -3,10 +3,11 @@
 #include "linuxThread.h"
 #include "cmdReceiver.h"
 #include "playerMsgQ.h"
-#include "PlayerMsg_DownloadFile.h"
+#include "PlayerMsg_Common.h"
 
 #include <stdio.h>
 #include <curl/curl.h>
+#include <memory>
 
 class fileDownloader : public linuxThread, public cmdReceiver
 {
@@ -17,11 +18,11 @@ class fileDownloader : public linuxThread, public cmdReceiver
     void InitComponent(cmdReceiver* manager);
     void DeinitComponent();
     // override
-    void UpdateCMDReceiver(PlayerMsg_Base*& msg);
+    void UpdateCMDReceiver(std::shared_ptr<PlayerMsg_Base> msg);
  private:
     static size_t WriteFunction(void *contents, size_t size, size_t nmemb, void *userp);
-    void ProcessMsg(PlayerMsg_Base* msg);
-    void ProcessMsg(PlayerMsg_DownloadFile* msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg);
     // override
     void* Main();
  private:

@@ -4,6 +4,7 @@
 #include "PlayerMsg_Base.h"
 
 #include <queue>
+#include <memory>
 
 class playerMsgQ
 {
@@ -12,8 +13,8 @@ class playerMsgQ
     ~playerMsgQ();
 
     void InitComponent(int totalMsgSizeLimit);
-    bool AddMsg(PlayerMsg_Base*& msg);
-    void GetMsg(PlayerMsg_Base*& msg);
+    bool AddMsg(std::shared_ptr<PlayerMsg_Base> msg);
+    void GetMsg(std::shared_ptr<PlayerMsg_Base>& msg);
     int GetMsgNum();
     int GetTotalMsgSize();
  private:
@@ -21,7 +22,7 @@ class playerMsgQ
     pthread_cond_t m_cond;
     int m_totalMsgSizeLimit;
     int m_totalMsgSize;
-    std::queue<PlayerMsg_Base*> m_msgQ;
+    std::queue<std::shared_ptr<PlayerMsg_Base> > m_msgQ;
 };
 
 #endif

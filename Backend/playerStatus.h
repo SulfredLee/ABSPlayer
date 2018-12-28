@@ -1,6 +1,7 @@
 #ifndef PLAYERSTATUS_H
 #define PLAYERSTATUS_H
 #include <string>
+#include <memory>
 #include "DefaultMutex.h"
 
 enum StatusCMD

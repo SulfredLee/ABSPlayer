@@ -10,5 +10,6 @@
 #include "PlayerMsg_DownloadVideo.h"
 #include "PlayerMsg_DownloadAudio.h"
 #include "PlayerMsg_DownloadSubtitle.h"
+#include "PlayerMsg_Dummy.h"
 
 #endif

@@ -9,6 +9,8 @@ fileDownloader::fileDownloader()
 fileDownloader::~fileDownloader()
 {
     stopThread();
+    std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
+    m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
 }
 
 void fileDownloader::InitComponent(cmdReceiver* manager)
@@ -33,7 +35,7 @@ size_t fileDownloader::WriteFunction(void *contents, size_t size, size_t nmemb, 
     return realsize;
 }
 
-void fileDownloader::ProcessMsg(PlayerMsg_Base* msg)
+void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_INFO("Process message %s", msg->GetMsgTypeName().c_str());
 
@@ -44,14 +46,14 @@ void fileDownloader::ProcessMsg(PlayerMsg_Base* msg)
         case PlayerMsg_Type_DownloadVideo:
         case PlayerMsg_Type_DownloadAudio:
         case PlayerMsg_Type_DownloadSubtitle:
-            ProcessMsg(static_cast<PlayerMsg_DownloadFile*>(msg));
+            ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(msg));
             break;
         default:
             break;
     }
 }
 
-void fileDownloader::ProcessMsg(PlayerMsg_DownloadFile* msg)
+void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
 {
     CURL *curl_handle;
     CURLcode res;
@@ -68,7 +70,7 @@ void fileDownloader::ProcessMsg(PlayerMsg_DownloadFile* msg)
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteFunction);
 
     /* we pass our 'chunk' struct to the callback function */
-    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, static_cast<void*>(msg));
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, static_cast<void*>(msg.get()));
 
     /* some servers don't like requests that are made without a user-agent
        field, so we provide one */
@@ -102,12 +104,11 @@ void fileDownloader::ProcessMsg(PlayerMsg_DownloadFile* msg)
 
 
     // finished download and alert manager
-    PlayerMsg_Base* msgBase = static_cast<PlayerMsg_Base*>(msg);
-    if (m_manager) m_manager->UpdateCMDReceiver(msgBase);
+    if (m_manager) m_manager->UpdateCMDReceiver(std::static_pointer_cast<PlayerMsg_Base>(msg));
 }
 
 // override
-void fileDownloader::UpdateCMDReceiver(PlayerMsg_Base*& msg)
+void fileDownloader::UpdateCMDReceiver(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_INFO("Received message %s", msg->GetMsgTypeName().c_str());
 
@@ -118,12 +119,7 @@ void fileDownloader::UpdateCMDReceiver(PlayerMsg_Base*& msg)
         case PlayerMsg_Type_DownloadVideo:
         case PlayerMsg_Type_DownloadAudio:
         case PlayerMsg_Type_DownloadSubtitle:
-            if (!m_msgQ.AddMsg(msg))
-            {
-                if (msg)
-                    delete msg;
-            }
-            msg = NULL;
+            m_msgQ.AddMsg(msg);
             break;
         default:
             break;
@@ -137,16 +133,10 @@ void* fileDownloader::Main()
 
     while(isThreadRunning())
     {
-        PlayerMsg_Base* msg = NULL;
+        std::shared_ptr<PlayerMsg_Base> msg;
         m_msgQ.GetMsg(msg);
 
         ProcessMsg(msg);
-
-        if (msg)
-        {
-            delete msg;
-            msg = NULL;
-        }
     }
 
     LOGMSG_INFO("OUT");

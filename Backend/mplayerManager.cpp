@@ -15,6 +15,8 @@ mplayerManager::~mplayerManager()
     m_audioDownloader.DeinitComponent();
     m_subtitleDownloader.DeinitComponent();
     stopThread();
+    std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
+    m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
 }
 
 void mplayerManager::InitComponent()
@@ -28,7 +30,7 @@ void mplayerManager::InitComponent()
     startThread();
 }
 
-void mplayerManager::ProcessMsg(PlayerMsg_Base* msg)
+void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_INFO("Process message %s", msg->GetMsgTypeName().c_str());
 
@@ -36,7 +38,7 @@ void mplayerManager::ProcessMsg(PlayerMsg_Base* msg)
     {
         case PlayerMsg_Type_Open:
             {
-                ProcessMsg(static_cast<PlayerMsg_Open*>(msg));
+                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_Open>(msg));
                 break;
             }
         default:
@@ -44,16 +46,16 @@ void mplayerManager::ProcessMsg(PlayerMsg_Base* msg)
     }
 }
 
-void mplayerManager::ProcessMsg(PlayerMsg_Open* msg)
+void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg)
 {
-    PlayerMsg_DownloadMPD* msgMPD = new PlayerMsg_DownloadMPD();
+    std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::make_shared<PlayerMsg_DownloadMPD>();
     msgMPD->SetURL(msg->GetURL());
-    PlayerMsg_Base* msgTemp = static_cast<PlayerMsg_Base*>(msgMPD);
+    std::shared_ptr<PlayerMsg_Base> msgTemp = std::static_pointer_cast<PlayerMsg_Base>(msgMPD);
     m_mpdDownloader.UpdateCMDReceiver(msgTemp);
 }
 
 // override
-void mplayerManager::UpdateCMDReceiver(PlayerMsg_Base*& msg)
+void mplayerManager::UpdateCMDReceiver(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_INFO("Received message %s", msg->GetMsgTypeName().c_str());
 
@@ -61,7 +63,7 @@ void mplayerManager::UpdateCMDReceiver(PlayerMsg_Base*& msg)
     {
         case PlayerMsg_Type_DownloadMPD:
             {
-                m_playerStatus.ProcessStatusCMD(StatusCMD_Set_MPD, static_cast<void*>(msg));
+                m_playerStatus.ProcessStatusCMD(StatusCMD_Set_MPD, static_cast<void*>(msg.get()));
                 break;
             }
         case PlayerMsg_Type_Open:
@@ -69,13 +71,7 @@ void mplayerManager::UpdateCMDReceiver(PlayerMsg_Base*& msg)
         case PlayerMsg_Type_Pause:
         case PlayerMsg_Type_Stop:
             {
-                if (!m_msgQ.AddMsg(msg))
-                {
-                    LOGMSG_ERROR("AddMsg() fail, delete, %s", msg->GetMsgTypeName().c_str());
-                    if (msg)
-                        delete msg;
-                    msg = NULL;
-                }
+                m_msgQ.AddMsg(msg);
                 break;
             }
         default:
@@ -90,16 +86,10 @@ void* mplayerManager::Main()
 
     while(isThreadRunning())
     {
-        PlayerMsg_Base* msg = NULL;
+        std::shared_ptr<PlayerMsg_Base> msg;
         m_msgQ.GetMsg(msg);
 
         ProcessMsg(msg);
-
-        if (msg)
-        {
-            delete msg;
-            msg = NULL;
-        }
     }
 
     LOGMSG_INFO("OUT");

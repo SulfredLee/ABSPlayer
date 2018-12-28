@@ -4,6 +4,7 @@
 #include "PlayerMsg_Common.h"
 
 #include <unistd.h>
+#include <memory>
 
 int main(int argc, char* argv[])
 {
@@ -25,30 +26,33 @@ int main(int argc, char* argv[])
                 {
                     std::cout << "Input url" << std::endl;
                     std::cin >> url;
-                    PlayerMsg_Open* msg = new PlayerMsg_Open();
-                    msg->SetURL(url);
-                    PlayerMsg_Base* msgBase = static_cast<PlayerMsg_Base*>(msg);
-                    cmdHandler->UpdateCMDReceiver(msgBase);
+                    for (int i = 0; i < 10; i++)
+                    {
+                        std::shared_ptr<PlayerMsg_Open> msg = std::make_shared<PlayerMsg_Open>();
+                        msg->SetURL(url);
+                        std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
+                        cmdHandler->UpdateCMDReceiver(msgBase);
+                    }
                     break;
                 }
             case 2:
                 {
-                    PlayerMsg_Play* msg = new PlayerMsg_Play();
-                    PlayerMsg_Base* msgBase = static_cast<PlayerMsg_Base*>(msg);
+                    std::shared_ptr<PlayerMsg_Play> msg = std::make_shared<PlayerMsg_Play>();
+                    std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
                     cmdHandler->UpdateCMDReceiver(msgBase);
                     break;
                 }
             case 3:
                 {
-                    PlayerMsg_Pause* msg = new PlayerMsg_Pause();
-                    PlayerMsg_Base* msgBase = static_cast<PlayerMsg_Base*>(msg);
+                    std::shared_ptr<PlayerMsg_Pause> msg = std::make_shared<PlayerMsg_Pause>();
+                    std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
                     cmdHandler->UpdateCMDReceiver(msgBase);
                     break;
                 }
             case 4:
                 {
-                    PlayerMsg_Stop* msg = new PlayerMsg_Stop();
-                    PlayerMsg_Base* msgBase = static_cast<PlayerMsg_Base*>(msg);
+                    std::shared_ptr<PlayerMsg_Stop> msg = std::make_shared<PlayerMsg_Stop>();
+                    std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
                     cmdHandler->UpdateCMDReceiver(msgBase);
                     break;
                 }
