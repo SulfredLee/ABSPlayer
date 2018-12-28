@@ -2,6 +2,8 @@ set(targetName "mediaPlayer")
 get_filename_component(folderName ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 string(REPLACE " " "_" folderName ${folderName})
 
+find_package(CURL REQUIRED)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 
 file(GLOB ${folderName}_inc
@@ -20,13 +22,16 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/Util
   ${CMAKE_CURRENT_SOURCE_DIR}/PlayerMsg
   ${CMAKE_CURRENT_SOURCE_DIR}/Backend
-  ${libcurl_INCLUDE_DIR})
+  ${libcurl_INCLUDE_DIR}
+  ${libdash_INCLUDE_DIR})
 
 add_executable(${targetName} ${${folderName}_src})
 
 target_link_libraries(${targetName}
   ${CMAKE_THREAD_LIBS_INIT}
-  ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0)
+  # ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0
+  ${CURL_LIBRARIES}
+  ${libdash_LIBRARY_DIR}/libdash.so)
 
 # Creates a folder "executables" and adds target
 # project (*.vcproj) under it

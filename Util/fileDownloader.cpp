@@ -1,5 +1,7 @@
 #include "fileDownloader.h"
 #include "Logger.h"
+#include "IMPD.h"
+#include "libdash.h"
 
 fileDownloader::fileDownloader()
 {
@@ -42,11 +44,13 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     switch(msg->GetMsgType())
     {
         case PlayerMsg_Type_DownloadFile:
-        case PlayerMsg_Type_DownloadMPD:
         case PlayerMsg_Type_DownloadVideo:
         case PlayerMsg_Type_DownloadAudio:
         case PlayerMsg_Type_DownloadSubtitle:
             ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(msg));
+            break;
+        case PlayerMsg_Type_DownloadMPD:
+            ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg));
             break;
         default:
             break;
@@ -105,6 +109,18 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
 
     // finished download and alert manager
     if (m_manager) m_manager->UpdateCMDReceiver(std::static_pointer_cast<PlayerMsg_Base>(msg));
+}
+
+void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+{
+    dash::IDASHManager* dashManager = CreateDashManager();
+    char* tmpFileName = new char[msg->GetURL().size()];
+    sprintf(tmpFileName, "%s", msg->GetURL().c_str());
+    dash::mpd::IMPD* mpdFile = dashManager->Open(tmpFileName);
+
+    if (tmpFileName)
+        delete[] tmpFileName;
+    tmpFileName = NULL;
 }
 
 // override

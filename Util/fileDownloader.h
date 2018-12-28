@@ -23,6 +23,7 @@ class fileDownloader : public linuxThread, public cmdReceiver
     static size_t WriteFunction(void *contents, size_t size, size_t nmemb, void *userp);
     void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
     // override
     void* Main();
  private:
