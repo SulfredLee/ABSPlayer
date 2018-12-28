@@ -26,13 +26,10 @@ int main(int argc, char* argv[])
                 {
                     std::cout << "Input url" << std::endl;
                     std::cin >> url;
-                    for (int i = 0; i < 10; i++)
-                    {
-                        std::shared_ptr<PlayerMsg_Open> msg = std::make_shared<PlayerMsg_Open>();
-                        msg->SetURL(url);
-                        std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
-                        cmdHandler->UpdateCMDReceiver(msgBase);
-                    }
+                    std::shared_ptr<PlayerMsg_Open> msg = std::make_shared<PlayerMsg_Open>();
+                    msg->SetURL(url);
+                    std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
+                    cmdHandler->UpdateCMDReceiver(msgBase);
                     break;
                 }
             case 2:
