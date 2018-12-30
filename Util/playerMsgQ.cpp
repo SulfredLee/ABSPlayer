@@ -1,4 +1,5 @@
 #include "playerMsgQ.h"
+#include "Logger.h"
 
 playerMsgQ::playerMsgQ()
 {
@@ -27,6 +28,7 @@ bool playerMsgQ::AddMsg(std::shared_ptr<PlayerMsg_Base> msg)
     else
     {
         m_msgQ.push(msg);
+        m_totalMsgSize += msg->GetMsgSize();
         pthread_cond_signal(&m_cond);
         ret = true;
     }
@@ -42,6 +44,7 @@ void playerMsgQ::GetMsg(std::shared_ptr<PlayerMsg_Base>& msg)
     }
     msg = m_msgQ.front();
     m_msgQ.pop();
+    m_totalMsgSize -= msg->GetMsgSize();
     pthread_mutex_unlock(m_mutex.GetMutex());
 }
 

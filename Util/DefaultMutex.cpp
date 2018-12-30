@@ -2,6 +2,7 @@
 
 DefaultMutex::DefaultMutex()
 {
+    pthread_mutexattr_init(&m_Attr);
     pthread_mutexattr_settype(&m_Attr, PTHREAD_MUTEX_DEFAULT);
     pthread_mutex_init(&m_Mutex, &m_Attr);
 }

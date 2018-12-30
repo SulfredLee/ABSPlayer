@@ -31,8 +31,12 @@ void PlayerMsg_DownloadFile::SetURL(std::string url)
 
 void PlayerMsg_DownloadFile::SetFile(unsigned char* data, size_t dataLength)
 {
-    m_file.clear();
     m_file.insert(m_file.end(), data, data + dataLength);
+}
+
+void PlayerMsg_DownloadFile::ClearFile()
+{
+    m_file.clear();
 }
 
 std::string PlayerMsg_DownloadFile::GetURL()
@@ -48,4 +52,14 @@ std::vector<unsigned char> PlayerMsg_DownloadFile::GetFile()
 size_t PlayerMsg_DownloadFile::GetFileLength()
 {
     return m_file.size();
+}
+
+void PlayerMsg_DownloadFile::SetDownloadTime(uint64_t downloadTime)
+{
+    m_downloadTime = downloadTime;
+}
+
+uint64_t PlayerMsg_DownloadFile::GetDownloadTime()
+{
+    return m_downloadTime;
 }

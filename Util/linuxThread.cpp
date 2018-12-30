@@ -4,12 +4,13 @@
 linuxThread::linuxThread()
 {
     m_run = false;
+    m_thread = 0;
 }
 
 linuxThread::~linuxThread()
 {
     stopThread();
-    pthread_join(m_thread, NULL);
+    if (m_thread) pthread_join(m_thread, NULL);
 }
 
 bool linuxThread::startThread()
@@ -32,6 +33,12 @@ bool linuxThread::isThreadRunning()
 void linuxThread::stopThread()
 {
     m_run = false;
+}
+
+void linuxThread::joinThread()
+{
+    if (m_thread) pthread_join(m_thread, NULL);
+    m_thread = 0;
 }
 
 void* linuxThread::MainProxy(void* context)

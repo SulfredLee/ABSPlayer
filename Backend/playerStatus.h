@@ -6,15 +6,17 @@
 
 enum StatusCMD
 {
-    StatusCMD_Set_MPD,
     StatusCMD_Set_Stage,
-    StatusCMD_Get_MPD,
+    StatusCMD_Set_ABSFileURL,
     StatusCMD_Get_Stage,
+    StatusCMD_Get_ABSFileURL,
     StatusCMD_End
 };
 
 enum PlayerStage
 {
+    PlayerStage_Open,
+    PlayerStage_Open_Finish,
     PlayerStage_Play,
     PlayerStage_Pause,
     PlayerStage_Stop,
@@ -30,8 +32,8 @@ class playerStatus
     void InitComponent();
     void ProcessStatusCMD(StatusCMD cmd, void* data);
  private:
-    std::string m_mpdFile;
     PlayerStage m_stage;
+    std::string m_ABSUrl;
     DefaultMutex m_mutex;
 };
 

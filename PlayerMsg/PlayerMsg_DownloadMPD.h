@@ -4,6 +4,8 @@
 #include "IMPD.h"
 #include "libdash.h"
 
+#include <memory>
+
 class PlayerMsg_DownloadMPD : public PlayerMsg_DownloadFile
 {
  public:
@@ -15,8 +17,11 @@ class PlayerMsg_DownloadMPD : public PlayerMsg_DownloadFile
     // override
     std::string GetMsgTypeName();
     void SetMPDFile(dash::mpd::IMPD* mpdFile);
+    void SetMPDFile(std::shared_ptr<dash::mpd::IMPD> mpdFile);
+    std::shared_ptr<dash::mpd::IMPD> GetAndMoveMPDFile();
+    bool IsMPDFileEmpty();
  private:
-    dash::mpd::IMPD* m_mpdFile;
+    std::shared_ptr<dash::mpd::IMPD> m_mpdFile;
 };
 
 #endif

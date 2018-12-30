@@ -14,6 +14,7 @@ class linuxThread
 
     bool startThread();
     void stopThread();
+    void joinThread();
     bool isThreadRunning();
  private:
     static void* MainProxy(void* context);
