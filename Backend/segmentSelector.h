@@ -24,6 +24,7 @@ class segmentSelector : public linuxThread, public cmdReceiver
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg) = 0;
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg) = 0;
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg) = 0;
+    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg) = 0;
 
     void SendToManager(std::shared_ptr<PlayerMsg_Base> msg);
  private:

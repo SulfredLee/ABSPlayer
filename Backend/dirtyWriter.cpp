@@ -34,12 +34,34 @@ void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
                 ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadVideo>(msg));
                 break;
             }
+        case PlayerMsg_Type_DownloadAudio:
+            {
+                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadAudio>(msg));
+                break;
+            }
         default:
             break;
     }
 }
 
 void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
+{
+    std::string fileURL = msg->GetURL();
+    ReplaceSubstring(fileURL, "http://", "./");
+    ReplaceSubstring(fileURL, "https://", "./");
+
+    // get folder path
+    std::string folderPath = GetFolderPath(fileURL);
+    // create folder is not exist
+    if (makePath(folderPath))
+    {
+        // Save file to disk
+        std::vector<unsigned char> file = msg->GetFile();
+        SaveFile(fileURL, file);
+    }
+}
+
+void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
 {
     std::string fileURL = msg->GetURL();
     ReplaceSubstring(fileURL, "http://", "./");

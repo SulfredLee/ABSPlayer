@@ -21,6 +21,7 @@ class dirtyWriter : public linuxThread, public cmdReceiver
  private:
     void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg);
     // override
     void* Main();
 

@@ -34,6 +34,8 @@ std::shared_ptr<PlayerMsg_Base> PlayerMsg_Factory::CreateMsg(PlayerMsg_Type msgT
             return std::make_shared<PlayerMsg_DownloadFinish>();
         case PlayerMsg_Type_GetPlayerStage:
             return std::make_shared<PlayerMsg_GetPlayerStage>();
+        case PlayerMsg_Type_ProcessNextSegment:
+            return std::make_shared<PlayerMsg_ProcessNextSegment>();
         case PlayerMsg_Type_Base:
         default:
             return std::make_shared<PlayerMsg_Base>();

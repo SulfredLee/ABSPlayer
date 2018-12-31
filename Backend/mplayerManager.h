@@ -10,6 +10,7 @@
 #include "dashSegmentSelector.h"
 #include "playerTimer.h"
 #include "dirtyWriter.h"
+#include "PlayerMsg_Factory.h"
 
 #include <memory>
 
@@ -29,6 +30,7 @@ class mplayerManager : public linuxThread, public cmdReceiver
     // override
     void* Main();
  private:
+    PlayerMsg_Factory m_msgFactory;
     playerMsgQ m_msgQ;
     dirtyWriter m_dirtyWriter;
     playerTimer m_eventTimer;

@@ -9,11 +9,11 @@ PlayerMsg_DownloadSubtitle::~PlayerMsg_DownloadSubtitle()
 // override
 PlayerMsg_Type PlayerMsg_DownloadSubtitle::GetMsgType()
 {
-    return PlayerMsg_Type_DownloadMPD;
+    return PlayerMsg_Type_DownloadSubtitle;
 }
 
 // override
 std::string PlayerMsg_DownloadSubtitle::GetMsgTypeName()
 {
-    return "PlayerMsg_Type_DownloadMPD";
+    return "PlayerMsg_Type_DownloadSubtitle";
 }

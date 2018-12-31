@@ -9,11 +9,11 @@ PlayerMsg_DownloadAudio::~PlayerMsg_DownloadAudio()
 // override
 PlayerMsg_Type PlayerMsg_DownloadAudio::GetMsgType()
 {
-    return PlayerMsg_Type_DownloadMPD;
+    return PlayerMsg_Type_DownloadAudio;
 }
 
 // override
 std::string PlayerMsg_DownloadAudio::GetMsgTypeName()
 {
-    return "PlayerMsg_Type_DownloadMPD";
+    return "PlayerMsg_Type_DownloadAudio";
 }

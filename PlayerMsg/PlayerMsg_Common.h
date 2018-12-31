@@ -12,6 +12,7 @@
 #include "PlayerMsg_DownloadSubtitle.h"
 #include "PlayerMsg_DownloadFinish.h"
 #include "PlayerMsg_GetPlayerStage.h"
+#include "PlayerMsg_ProcessNextSegment.h"
 #include "PlayerMsg_Dummy.h"
 
 #endif

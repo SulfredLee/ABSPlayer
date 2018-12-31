@@ -170,9 +170,32 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                 }
                 break;
             }
+        case PlayerMsg_Type_DownloadAudio:
+            {
+                if (msg->GetSender() == "segmentSelector")
+                {
+                    m_audioDownloader.UpdateCMD(msg);
+                }
+                else if (msg->GetSender() == "fileDownloader")
+                {
+                    if (!m_dirtyWriter.UpdateCMD(msg))
+                    {
+                        m_eventTimer.AddEvent(msg, 100, false); // try to process this message later
+                    }
+                }
+                break;
+            }
         case PlayerMsg_Type_DownloadFinish:
             {
-                if (m_segmentSelector) m_segmentSelector->UpdateCMD(msg);
+                if (m_segmentSelector)
+                {
+                    m_segmentSelector->UpdateCMD(msg);
+                    // process next segment
+                    std::shared_ptr<PlayerMsg_ProcessNextSegment> msgNext = std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
+                    std::shared_ptr<PlayerMsg_DownloadFinish> msgFinish = std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg);
+                    msgNext->SetSegmentType(msgFinish->GetFileType());
+                    m_segmentSelector->UpdateCMD(msgNext);
+                }
                 break;
             }
         case PlayerMsg_Type_Open:

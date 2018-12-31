@@ -49,6 +49,7 @@ class dashSegmentSelector : public segmentSelector
     void ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg);
 
     void InitStatus(dashMediaStatus& status);
 
@@ -56,16 +57,27 @@ class dashSegmentSelector : public segmentSelector
     void HandleAudioSegment();
     void HandleSubtitleSegment();
 
+    // video and audio
+    uint32_t GetTargetDownloadSize(const dashMediaStatus& mediaStatus, std::string mediaType);
+
+    // video
     uint32_t GetTargetDownloadSize_Video();
     downloadInfo GetDownloadInfo_Video(uint32_t targetDownloadSize);
     std::string GetDownloadURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
     std::string GetInitFileURL_Video(const downloadInfo& targetInfo);
     std::string GetSegmentURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
-    uint32_t GetSegmentDurationMSec(const downloadInfo& videoDownloadInfo);
+
+    // audio
+    uint32_t GetTargetDownloadSize_Audio();
+    downloadInfo GetDownloadInfo_Audio(uint32_t targetDownloadSize);
+    std::string GetDownloadURL_Audio(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
+    std::string GetInitFileURL_Audio(const downloadInfo& targetInfo);
+    std::string GetSegmentURL_Audio(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
     void ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to);
+    uint32_t GetSegmentDurationMSec(const downloadInfo& inDownloadInfo);
  private:
     DefaultMutex m_mutex;
     std::shared_ptr<dash::mpd::IMPD> m_mpdFile;
