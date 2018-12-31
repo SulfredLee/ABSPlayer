@@ -35,6 +35,7 @@ void mplayerManager::InitComponent()
     m_subtitleDownloader.InitComponent(static_cast<cmdReceiver*>(this));
     m_playerStatus.InitComponent();
     m_eventTimer.InitComponent(&m_msgQ);
+    m_dirtyWriter.InitComponent();
     startThread();
 }
 
@@ -115,10 +116,11 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
 }
 
 // override
-void mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_INFO("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
+    bool ret = true;
     switch(msg->GetMsgType())
     {
         case PlayerMsg_Type_DownloadMPD:
@@ -161,12 +163,16 @@ void mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                 }
                 else if (msg->GetSender() == "fileDownloader")
                 {
+                    if (!m_dirtyWriter.UpdateCMD(msg))
+                    {
+                        m_eventTimer.AddEvent(msg, 100, false); // try to process this message later
+                    }
                 }
                 break;
             }
         case PlayerMsg_Type_DownloadFinish:
             {
-                m_segmentSelector->UpdateCMD(msg);
+                if (m_segmentSelector) m_segmentSelector->UpdateCMD(msg);
                 break;
             }
         case PlayerMsg_Type_Open:
@@ -176,6 +182,7 @@ void mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
             {
                 if (!m_msgQ.AddMsg(msg))
                 {
+                    ret = false;
                     LOGMSG_ERROR("AddMsg fail");
                 }
                 break;
@@ -183,6 +190,7 @@ void mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
         default:
             break;
     }
+    return ret;
 }
 
 // override

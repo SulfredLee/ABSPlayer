@@ -24,7 +24,10 @@ bool playerMsgQ::AddMsg(std::shared_ptr<PlayerMsg_Base> msg)
     DefaultLock lock(&m_mutex);
     bool ret = false;
     if (m_totalMsgSize + msg->GetMsgSize() > m_totalMsgSizeLimit)
+    {
+        LOGMSG_ERROR("MsgSize in queue: %u, MsgSize: %u, Limit: %u", m_totalMsgSize, msg->GetMsgSize(), m_totalMsgSizeLimit);
         ret = false;
+    }
     else
     {
         m_msgQ.push(msg);

@@ -10,7 +10,7 @@ class cmdReceiver
     cmdReceiver();
     virtual ~cmdReceiver();
 
-    virtual void UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg) = 0;
+    virtual bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg) = 0;
 };
 
 #endif

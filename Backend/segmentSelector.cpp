@@ -68,10 +68,11 @@ void segmentSelector::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
 }
 
 // override
-void segmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool segmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_INFO("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
+    bool ret = true;
     switch(msg->GetMsgType())
     {
         case PlayerMsg_Type_DownloadMPD:
@@ -83,12 +84,14 @@ void segmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                 if (!m_msgQ.AddMsg(msg))
                 {
                     LOGMSG_ERROR("AddMsg fail");
+                    ret = false;
                 }
                 break;
             }
         default:
             break;
     }
+    return ret;
 }
 
 // override

@@ -9,6 +9,7 @@
 #include "segmentSelector.h"
 #include "dashSegmentSelector.h"
 #include "playerTimer.h"
+#include "dirtyWriter.h"
 
 #include <memory>
 
@@ -20,7 +21,7 @@ class mplayerManager : public linuxThread, public cmdReceiver
 
     void InitComponent();
     // override
-    void UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
+    bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
  private:
     void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg);
@@ -29,6 +30,7 @@ class mplayerManager : public linuxThread, public cmdReceiver
     void* Main();
  private:
     playerMsgQ m_msgQ;
+    dirtyWriter m_dirtyWriter;
     playerTimer m_eventTimer;
     fileDownloader m_mpdDownloader;
     fileDownloader m_videoDownloader;

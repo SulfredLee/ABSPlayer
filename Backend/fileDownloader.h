@@ -20,7 +20,7 @@ class fileDownloader : public linuxThread, public cmdReceiver
     void InitComponent(cmdReceiver* manager);
     void DeinitComponent();
     // override
-    void UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
+    bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
  private:
     static size_t WriteFunction(void *contents, size_t size, size_t nmemb, void *userp);
     void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);

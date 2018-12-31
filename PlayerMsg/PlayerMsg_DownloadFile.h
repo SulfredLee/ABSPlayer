@@ -14,7 +14,7 @@ class PlayerMsg_DownloadFile : public PlayerMsg_Base
     // override
     virtual std::string GetMsgTypeName();
     // override
-    virtual int GetMsgSize(); // only report message size when message has media data
+    virtual size_t GetMsgSize(); // only report message size when message has media data
 
     void SetURL(std::string url);
     void SetFile(unsigned char* data, size_t dataLength);

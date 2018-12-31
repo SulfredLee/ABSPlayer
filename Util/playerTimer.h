@@ -8,10 +8,12 @@
 #include "DefaultMutex.h"
 
 #include <map>
+#include <memory>
 
 struct playerTimerEvent
 {
     PlayerMsg_Type m_msgType;
+    std::shared_ptr<PlayerMsg_Base> m_msg;
     uint64_t m_targetTime;
     uint64_t m_duration;
     bool m_repeat;
@@ -26,6 +28,7 @@ class playerTimer : public linuxThread
     void InitComponent(playerMsgQ* msgQ);
     void DeinitComponent();
     void AddEvent(PlayerMsg_Type msgType, uint64_t timeMSec, bool repeat);
+    void AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec, bool repeat);
  private:
     uint64_t GetCurrentMSec();
     // override

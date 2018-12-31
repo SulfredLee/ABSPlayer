@@ -151,10 +151,11 @@ void fileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::
 }
 
 // override
-void fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_INFO("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
+    bool ret = true;
     switch(msg->GetMsgType())
     {
         case PlayerMsg_Type_DownloadFile:
@@ -166,12 +167,14 @@ void fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                 if (!m_msgQ.AddMsg(msg))
                 {
                     LOGMSG_ERROR("AddMsg fail");
+                    ret = false;
                 }
             }
             break;
         default:
             break;
     }
+    return ret;
 }
 
 // override

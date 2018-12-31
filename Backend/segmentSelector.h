@@ -17,7 +17,7 @@ class segmentSelector : public linuxThread, public cmdReceiver
 
     virtual void InitComponent(cmdReceiver* manager);
     // override
-    void UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
+    bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
  protected:
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg) = 0;

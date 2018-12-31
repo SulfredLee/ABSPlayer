@@ -19,7 +19,7 @@ std::string PlayerMsg_DownloadFile::GetMsgTypeName()
 }
 
 // override
-int PlayerMsg_DownloadFile::GetMsgSize() // only report message size when message has media data
+size_t PlayerMsg_DownloadFile::GetMsgSize() // only report message size when message has media data
 {
     return m_file.size();
 }

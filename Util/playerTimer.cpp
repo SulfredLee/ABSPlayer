@@ -33,7 +33,15 @@ void playerTimer::DeinitComponent()
 void playerTimer::AddEvent(PlayerMsg_Type msgType, uint64_t timeMSec, bool repeat)
 {
     uint64_t targetTime = GetCurrentMSec() + timeMSec;
-    playerTimerEvent tempEvent = {msgType, targetTime, timeMSec, repeat};
+    playerTimerEvent tempEvent = {msgType, nullptr, targetTime, timeMSec, repeat};
+    DefaultLock lock(&m_mutex);
+    m_eventQ.insert(std::make_pair(targetTime, tempEvent));
+}
+
+void playerTimer::AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec, bool repeat)
+{
+    uint64_t targetTime = GetCurrentMSec() + timeMSec;
+    playerTimerEvent tempEvent = {msg->GetMsgType(), msg, targetTime, timeMSec, repeat};
     DefaultLock lock(&m_mutex);
     m_eventQ.insert(std::make_pair(targetTime, tempEvent));
 }
@@ -64,13 +72,16 @@ void* playerTimer::Main()
                 // handle timer event
                 if (m_msgQ)
                 {
-                    m_msgQ->AddMsg(m_msgFactory.CreateMsg(it->second.m_msgType));
+                    if (it->second.m_msg != nullptr)
+                        m_msgQ->AddMsg(it->second.m_msg);
+                    else
+                        m_msgQ->AddMsg(m_msgFactory.CreateMsg(it->second.m_msgType));
                 }
                 // handle repeate event
                 if (it->second.m_repeat)
                 {
                     uint64_t nextTargetTime = currentMSec + it->second.m_duration;
-                    playerTimerEvent tempEvent = {it->second.m_msgType, nextTargetTime, it->second.m_duration, it->second.m_repeat};
+                    playerTimerEvent tempEvent = {it->second.m_msgType, it->second.m_msg, nextTargetTime, it->second.m_duration, it->second.m_repeat};
                     m_eventQ.insert(std::make_pair(nextTargetTime, tempEvent));
                 }
                 // remove and reset iterator

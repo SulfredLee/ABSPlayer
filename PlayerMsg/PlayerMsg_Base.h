@@ -31,7 +31,7 @@ class PlayerMsg_Base
 
     virtual PlayerMsg_Type GetMsgType();
     virtual std::string GetMsgTypeName();
-    virtual int GetMsgSize(); // only report message size when message has media data
+    virtual size_t GetMsgSize(); // only report message size when message has media data
     void SetSender(std::string sender);
     std::string GetSender();
  protected:

@@ -302,10 +302,12 @@ std::string dashSegmentSelector::GetSegmentURL_Video(const downloadInfo& videoDo
             sprintf(numberStr, numberFormat.c_str(), nextSegment);
             // replace the string
             ReplaceAllSubstring(mediaStr, "$Number" + numberFormat + "$", numberStr);
-            LOGMSG_DEBUG("sulfred debug %s numberFormat: %s numberStr: %s nextSegment: %u", mediaStr.c_str(), numberFormat.c_str(), numberStr, nextSegment);
+            LOGMSG_DEBUG("%s numberFormat: %s numberStr: %s nextSegment: %u", mediaStr.c_str(), numberFormat.c_str(), numberStr, nextSegment);
         }
         else
         {
+            LOGMSG_ERROR("Cannot format segment url");
+            return std::string();
         }
         ss << mediaStr;
 

@@ -19,7 +19,7 @@ std::string PlayerMsg_Base::GetMsgTypeName()
     return "PlayerMsg_Type_Base";
 }
 
-int PlayerMsg_Base::GetMsgSize()
+size_t PlayerMsg_Base::GetMsgSize()
 {
     return 0;
 }
