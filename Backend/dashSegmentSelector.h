@@ -12,17 +12,41 @@
 #include <string>
 #include <sstream>
 
+struct MPD_Period
+{
+    std::string duration;
+    std::string start;
+};
+
+struct MPD_AdaptationSet
+{
+    std::string mimeType;
+    std::string BaseURL;
+};
+
+struct MPD_SegmentTemplate
+{
+    uint32_t startNumber;
+    uint32_t timescale;
+    uint32_t duration;
+    std::string lang;
+    std::string media;
+    std::string initialization;
+};
+
+struct MPD_Representation
+{
+    uint32_t bandwidth;
+    std::string id;
+};
+
 struct downloadInfo
 {
-    uint32_t m_bandwidth;
-    std::string m_baseURL;
-    uint32_t m_startNumber;
-    uint32_t m_timescale;
-    uint32_t m_duration;
-    std::string m_media;
-    std::string m_initialization;
-    std::string m_lang;
-    std::string m_representationID;
+    std::string BaseURL;
+    MPD_Period Period;
+    MPD_AdaptationSet AdaptationSet;
+    MPD_SegmentTemplate SegmentTemplate;
+    MPD_Representation Representation;
 };
 
 struct dashMediaStatus
@@ -59,6 +83,8 @@ class dashSegmentSelector : public segmentSelector
 
     // video and audio
     uint32_t GetTargetDownloadSize(const dashMediaStatus& mediaStatus, std::string mediaType);
+    bool IsEOS(const uint64_t& nextDownloadTime, const downloadInfo& inDownloadInfo);
+    bool IsBOS(const uint64_t& nextDownloadTime, const downloadInfo& inDownloadInfo);
 
     // video
     uint32_t GetTargetDownloadSize_Video();
@@ -66,6 +92,7 @@ class dashSegmentSelector : public segmentSelector
     std::string GetDownloadURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
     std::string GetInitFileURL_Video(const downloadInfo& targetInfo);
     std::string GetSegmentURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
+    downloadInfo GetDownloadInfo_priv_Video(dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
 
     // audio
     uint32_t GetTargetDownloadSize_Audio();
@@ -73,11 +100,13 @@ class dashSegmentSelector : public segmentSelector
     std::string GetDownloadURL_Audio(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
     std::string GetInitFileURL_Audio(const downloadInfo& targetInfo);
     std::string GetSegmentURL_Audio(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
+    downloadInfo GetDownloadInfo_priv_Audio(dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
     void ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to);
     uint32_t GetSegmentDurationMSec(const downloadInfo& inDownloadInfo);
+    bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
  private:
     DefaultMutex m_mutex;
     std::shared_ptr<dash::mpd::IMPD> m_mpdFile;

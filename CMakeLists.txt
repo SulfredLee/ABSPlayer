@@ -4,7 +4,7 @@ string(REPLACE " " "_" folderName ${folderName})
 
 find_package(CURL REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-unknown-pragmas")
 
 file(GLOB ${folderName}_inc
   "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
