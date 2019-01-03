@@ -15,7 +15,7 @@
 Logger::Logger()
 {
     // handle default value
-    m_config.logLevel = Logger::LogLevel::DEBUG;
+    m_config.logLevel = Logger::LogLevel::WARN;
     m_config.logPath = ".";
     m_config.fileSize = 0;
     m_config.fileSizeLimit = 4 * 1024 * 1024; // 4 MByte

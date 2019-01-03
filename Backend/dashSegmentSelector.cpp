@@ -25,6 +25,7 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 
     // handle download process status
     m_videoStatus.m_numberSegment = 0;
+    m_audioStatus.m_numberSegment = 0;
 }
 
 void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
@@ -251,7 +252,7 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_Video(uint32_t targetDownloadS
                         }
                         if (highestQualityInfo.Representation.bandwidth < bandwidth)
                         {
-                            highestQualityInfo = GetDownloadInfo_priv_Audio(adaptationSet, segmentTemplate, representation);
+                            highestQualityInfo = GetDownloadInfo_priv_Video(adaptationSet, segmentTemplate, representation);
                         }
                     }
                 }
@@ -346,8 +347,24 @@ std::string dashSegmentSelector::GetSegmentURL_Video(const downloadInfo& videoDo
         }
         else
         {
-            LOGMSG_ERROR("Cannot format segment url");
-            return std::string();
+            // get next segment number
+            uint32_t nextSegment = m_videoStatus.m_numberSegment;
+            // get next download time
+            if (nextSegment < videoDownloadInfo.SegmentTemplate.SegmentTimeline.size())
+                nextDownloadTime = GetSegmentTimeMSec(videoDownloadInfo.SegmentTemplate.SegmentTimeline[nextSegment], videoDownloadInfo);
+            else
+            {
+                LOGMSG_ERROR("Out of range audio");
+                return "Video_EOS";
+            }
+            // check if EOS or BOS
+            if (IsEOS(nextDownloadTime, videoDownloadInfo))
+                return "Video_EOS";
+            if (IsBOS(nextDownloadTime, videoDownloadInfo))
+                return "Video_BOS";
+            // get the string format
+            ReplaceAllSubstring(mediaStr, "$Time$", std::to_string(videoDownloadInfo.SegmentTemplate.SegmentTimeline[nextSegment]));
+            LOGMSG_DEBUG("%s nextDownloadTime: %u", mediaStr.c_str(), videoDownloadInfo.SegmentTemplate.SegmentTimeline[nextSegment]);
         }
         ss << mediaStr;
 
@@ -361,7 +378,12 @@ std::string dashSegmentSelector::GetSegmentURL_Video(const downloadInfo& videoDo
 
 uint32_t dashSegmentSelector::GetSegmentDurationMSec(const downloadInfo& inDownloadInfo)
 {
-    return (static_cast<double>(inDownloadInfo.SegmentTemplate.duration) / inDownloadInfo.SegmentTemplate.timescale) * 1000;
+    return GetSegmentTimeMSec(inDownloadInfo.SegmentTemplate.duration, inDownloadInfo);
+}
+
+uint32_t dashSegmentSelector::GetSegmentTimeMSec(const uint64_t& inTime, const downloadInfo& inDownloadInfo)
+{
+    return (static_cast<double>(inTime) / inDownloadInfo.SegmentTemplate.timescale) * 1000;
 }
 
 uint32_t dashSegmentSelector::GetTargetDownloadSize_Audio()
@@ -390,7 +412,7 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_Audio(uint32_t targetDownloadS
             if (mimeType.find(mediaType_Target) != std::string::npos) // found audio representation
             {
                 std::string audioLang = adaptationSet->GetLang();
-                if (audioLang == audioLang_Target) // select audio language
+                if (audioLang == audioLang_Target || audioLang == "") // select audio language
                 {
                     std::vector<dash::mpd::IRepresentation *> representations = adaptationsSets[j]->GetRepresentation();
                     dash::mpd::ISegmentTemplate* segmentTemplate = adaptationSet->GetSegmentTemplate();
@@ -511,8 +533,24 @@ std::string dashSegmentSelector::GetSegmentURL_Audio(const downloadInfo& targetI
         }
         else
         {
-            LOGMSG_ERROR("Cannot format segment url");
-            return std::string();
+            // get next segment number
+            uint32_t nextSegment = m_audioStatus.m_numberSegment;
+            // get next download time
+            if (nextSegment < targetInfo.SegmentTemplate.SegmentTimeline.size())
+                nextDownloadTime = GetSegmentTimeMSec(targetInfo.SegmentTemplate.SegmentTimeline[nextSegment], targetInfo);
+            else
+            {
+                LOGMSG_ERROR("Out of range audio");
+                return "Audio_EOS";
+            }
+            // check if EOS or BOS
+            if (IsEOS(nextDownloadTime, targetInfo))
+                return "Audio_EOS";
+            if (IsBOS(nextDownloadTime, targetInfo))
+                return "Audio_BOS";
+            // get the string format
+            ReplaceAllSubstring(mediaStr, "$Time$", std::to_string(targetInfo.SegmentTemplate.SegmentTimeline[nextSegment]));
+            LOGMSG_DEBUG("%s nextDownloadTime: %u", mediaStr.c_str(), targetInfo.SegmentTemplate.SegmentTimeline[nextSegment]);
         }
         ss << mediaStr;
 
@@ -547,10 +585,15 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Audio(dash::mpd::IAdaptat
     dash::mpd::IBaseUrl* BaseURL = m_mpdFile->GetMPDPathBaseUrl();
     resultInfo.BaseURL = BaseURL->GetUrl() + "/";
 
+    // handle representation
     resultInfo.Representation.bandwidth = representation->GetBandwidth();
     resultInfo.Representation.id = representation->GetId();
+    // handle adaptationSet
     resultInfo.AdaptationSet.BaseURL = adaptationSet->GetBaseURLs().size() ? adaptationSet->GetBaseURLs()[0]->GetUrl() : std::string();
+    // handle segmentTemplate
     resultInfo.SegmentTemplate.media = segmentTemplate->Getmedia();
+    if (resultInfo.SegmentTemplate.media.find("Time") != std::string::npos)
+        resultInfo.SegmentTemplate.SegmentTimeline = GetSegmentTimeline(segmentTemplate);
     resultInfo.SegmentTemplate.startNumber = segmentTemplate->GetStartNumber();
     resultInfo.SegmentTemplate.timescale = segmentTemplate->GetTimescale();
     resultInfo.SegmentTemplate.duration = segmentTemplate->GetDuration();
@@ -567,10 +610,15 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Video(dash::mpd::IAdaptat
     dash::mpd::IBaseUrl* BaseURL = m_mpdFile->GetMPDPathBaseUrl();
     resultInfo.BaseURL = BaseURL->GetUrl() + "/";
 
+    // handle representation
     resultInfo.Representation.bandwidth = representation->GetBandwidth();
     resultInfo.Representation.id = representation->GetId();
+    // handle adaptationSet
     resultInfo.AdaptationSet.BaseURL = adaptationSet->GetBaseURLs().size() ? adaptationSet->GetBaseURLs()[0]->GetUrl() : std::string();
+    // handle segmentTemplate
     resultInfo.SegmentTemplate.media = segmentTemplate->Getmedia();
+    if (resultInfo.SegmentTemplate.media.find("Time") != std::string::npos)
+        resultInfo.SegmentTemplate.SegmentTimeline = GetSegmentTimeline(segmentTemplate);
     resultInfo.SegmentTemplate.startNumber = segmentTemplate->GetStartNumber();
     resultInfo.SegmentTemplate.timescale = segmentTemplate->GetTimescale();
     resultInfo.SegmentTemplate.duration = segmentTemplate->GetDuration();
@@ -637,4 +685,37 @@ bool dashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& time
     }
 
     return true;
+}
+
+std::vector<uint32_t> dashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate)
+{
+    std::vector<uint32_t> result;
+    dash::mpd::ISegmentTimeline const * SegmentTimeline = segmentTemplate->GetSegmentTimeline();
+    if (SegmentTimeline)
+    {
+        std::vector<dash::mpd::ITimeline *> timeline = SegmentTimeline->GetTimelines();
+        for (size_t i = 0; i < timeline.size(); i++)
+        {
+            uint32_t startTime = timeline[i]->GetStartTime();
+            uint32_t duration = timeline[i]->GetDuration();
+            uint32_t repeatCount = timeline[i]->GetRepeatCount();
+            if (i == 0)
+            {
+                result.push_back(startTime);
+                result.push_back(startTime + duration);
+                LOGMSG_DEBUG("time: %u time: %u", result[0], result[1]);
+            }
+            else
+            {
+                result.push_back(result.back() + duration);
+                LOGMSG_DEBUG("time: %u", result.back());
+            }
+            for (uint32_t j = 0; j < repeatCount; j++)
+            {
+                result.push_back(result.back() + duration);
+                LOGMSG_DEBUG("time: %u", result.back());
+            }
+        }
+    }
+    return result;
 }
