@@ -71,27 +71,8 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 
 void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
 {
-    CURLcode res;
-
-    /* specify URL to get */
-    curl_easy_setopt(m_curl_handle, CURLOPT_URL, msg->GetURL().c_str());
-
-    /* send all data to this function  */
-    curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, WriteFunction);
-
-    /* we pass our 'chunk' struct to the callback function */
-    curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, static_cast<void*>(msg.get()));
-
-    /* some servers don't like requests that are made without a user-agent
-       field, so we provide one */
-    curl_easy_setopt(m_curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-
     CountTimer countTimer;
-    countTimer.Start();
-    /* get it! */
-    res = curl_easy_perform(m_curl_handle);
-    countTimer.Stop();
-
+    CURLcode res = DownloadAFile(msg, countTimer);
     /* check for errors */
     if(res != CURLE_OK)
     {
@@ -109,25 +90,39 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
         LOGMSG_INFO("%lu bytes retrieved, time spent: %f", msg->GetFileLength(), countTimer.GetSecondDouble());
 
         // finished download and alert manager
-        SendToManager(std::static_pointer_cast<PlayerMsg_Base>(msg));
+        SendToManager(msg);
         SendDownloadFinishedMsg(countTimer, msg);
     }
 }
 
 void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 {
-    dash::IDASHManager* dashManager = CreateDashManager();
-    char* tmpFileName = new char[msg->GetURL().size()];
-    sprintf(tmpFileName, "%s", msg->GetURL().c_str());
-    dash::mpd::IMPD* mpdFile = dashManager->Open(tmpFileName);
-    msg->SetMPDFile(mpdFile);
+    CountTimer countTimer;
+    CURLcode res = DownloadAFile(msg, countTimer);
+    /* check for errors */
+    if(res != CURLE_OK)
+    {
+        LOGMSG_ERROR("curl_easy_perform() failed: %s", curl_easy_strerror(res));
+    }
+    else
+    {
+        /*
+         * Now, our chunk.memory points to a memory block that is chunk.size
+         * bytes big and contains the remote file.
+         *
+         * Do something nice with it!
+         */
 
-    if (tmpFileName)
-        delete[] tmpFileName;
-    tmpFileName = NULL;
+        LOGMSG_INFO("%lu bytes retrieved, time spent: %f", msg->GetFileLength(), countTimer.GetSecondDouble());
 
-    // finished download and alert manager
-    SendToManager(std::static_pointer_cast<PlayerMsg_Base>(msg));
+        dash::IDASHManager* dashManager = CreateDashManager();
+        dash::mpd::IMPD* mpdFile = dashManager->Open(msg->GetFile());
+        msg->SetMPDFile(mpdFile);
+
+        // finished download and alert manager
+        SendToManager(std::static_pointer_cast<PlayerMsg_Base>(msg));
+        SendDownloadFinishedMsg(countTimer, msg);
+    }
 }
 
 void fileDownloader::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
@@ -192,4 +187,29 @@ void* fileDownloader::Main()
 
     LOGMSG_INFO("OUT");
     return NULL;
+}
+
+CURLcode fileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> msg, CountTimer& countTimer)
+{
+    CURLcode res;
+
+    /* specify URL to get */
+    curl_easy_setopt(m_curl_handle, CURLOPT_URL, msg->GetURL().c_str());
+
+    /* send all data to this function  */
+    curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, WriteFunction);
+
+    /* we pass our 'chunk' struct to the callback function */
+    curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, static_cast<void*>(msg.get()));
+
+    /* some servers don't like requests that are made without a user-agent
+       field, so we provide one */
+    curl_easy_setopt(m_curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+    countTimer.Start();
+    /* get it! */
+    res = curl_easy_perform(m_curl_handle);
+    countTimer.Stop();
+
+    return res;
 }

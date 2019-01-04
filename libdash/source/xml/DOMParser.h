@@ -18,6 +18,8 @@
 #include <libxml/xmlreader.h>
 #include "../helpers/Path.h"
 
+#include <vector>
+
 namespace dash
 {
     namespace xml
@@ -35,16 +37,19 @@ namespace dash
         {
             public:
                 DOMParser           (std::string url);
+                DOMParser           (const std::vector<unsigned char>& xmlFile);
                 virtual ~DOMParser  ();
 
-                bool    Parse       ();
-                Node*   GetRootNode () const;
-                void    Print       ();
+                bool    Parse                 ();
+                bool    ParseFromMemory       ();
+                Node*   GetRootNode           () const;
+                void    Print                 ();
 
             private:
-                xmlTextReaderPtr    reader;
-                Node                *root;
-                std::string         url;
+                xmlTextReaderPtr           reader;
+                Node                       *root;
+                std::string                url;
+                std::vector<unsigned char> xmlFile;
 
                 void    Init                    ();
                 Node*   ProcessNode             ();

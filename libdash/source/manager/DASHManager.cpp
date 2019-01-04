@@ -17,13 +17,13 @@ using namespace dash::mpd;
 using namespace dash::network;
 using namespace dash::helpers;
 
-DASHManager::DASHManager            ()
+DASHManager::DASHManager                   ()
 {
 }
-DASHManager::~DASHManager           ()
+DASHManager::~DASHManager                  ()
 {
 }
-IMPD*           DASHManager::Open   (char *path)
+IMPD*           DASHManager::Open          (char *path)
 {
     DOMParser parser(path);
 
@@ -39,7 +39,23 @@ IMPD*           DASHManager::Open   (char *path)
 
     return mpd;
 }
-void            DASHManager::Delete ()
+mpd::IMPD*      DASHManager::Open    (const std::vector<unsigned char>& xmlFile)
+{
+    DOMParser parser(xmlFile);
+
+    uint32_t fetchTime = Time::GetCurrentUTCTimeInSec();
+
+    if (!parser.ParseFromMemory())
+        return NULL;
+
+    MPD* mpd = parser.GetRootNode()->ToMPD();
+
+    if (mpd)
+        mpd->SetFetchTime(fetchTime);
+
+    return mpd;
+}
+void            DASHManager::Delete        ()
 {
     delete this;
 }

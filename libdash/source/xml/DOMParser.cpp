@@ -21,6 +21,13 @@ DOMParser::DOMParser    (std::string url) :
 {
     this->Init();
 }
+DOMParser::DOMParser    (const std::vector<unsigned char>& inXmlFile) :
+           xmlFile      (inXmlFile),
+           reader       (NULL),
+           root         (NULL)
+{
+    this->Init();
+}
 DOMParser::~DOMParser   ()
 {
     xmlCleanupParser();
@@ -34,6 +41,23 @@ Node*   DOMParser::GetRootNode              () const
 bool    DOMParser::Parse                    ()
 {
     this->reader = xmlReaderForFile(this->url.c_str(), NULL, 0);
+
+    if(this->reader == NULL)
+        return false;
+
+    if(xmlTextReaderRead(this->reader)) 
+        this->root = this->ProcessNode();
+
+    if(this->root == NULL)
+        return false;
+
+    xmlFreeTextReader(this->reader);
+
+    return true;
+}
+bool    DOMParser::ParseFromMemory          ()
+{
+    this->reader = xmlReaderForMemory(reinterpret_cast<char*>(&(this->xmlFile[0])), this->xmlFile.size(), NULL, NULL, 0);
 
     if(this->reader == NULL)
         return false;

@@ -27,6 +27,7 @@ class fileDownloader : public linuxThread, public cmdReceiver
     void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
 
+    CURLcode DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> msg, CountTimer& countTimer);
     void SendToManager(std::shared_ptr<PlayerMsg_Base> msg);
     void SendDownloadFinishedMsg(const CountTimer& countTimer, std::shared_ptr<PlayerMsg_DownloadFile> msg);
     // override

@@ -36,6 +36,13 @@ namespace dash
             virtual mpd::IMPD* Open (char *path) = 0;
 
             /**
+             *  Returns a pointer to dash::mpd::IMPD object representing the the information found in the MPD file specified by \em path
+             *  @param      xmlFile    A memory buffer storing a MPD file
+             *  @return     a pointer to an dash::mpd::IMPD object
+             */
+            virtual mpd::IMPD* Open (const std::vector<unsigned char>& xmlFile) = 0;
+
+            /**
              *  Frees allocated memory and deletes the DashManager
              */
             virtual void        Delete  () = 0;

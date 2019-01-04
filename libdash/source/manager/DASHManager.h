@@ -19,16 +19,19 @@
 #include "IDASHManager.h"
 #include "../helpers/Time.h"
 
+#include <vector>
+
 namespace dash
 {
     class DASHManager : public IDASHManager
     {
         public:
-            DASHManager             ();
-            virtual ~DASHManager    ();
+            DASHManager               ();
+            virtual ~DASHManager      ();
 
-            mpd::IMPD*  Open    (char *path);
-            void        Delete  ();
+            mpd::IMPD*  Open          (char *path);
+            mpd::IMPD*  Open    (const std::vector<unsigned char>& xmlFile);
+            void        Delete        ();
     };
 }
 
