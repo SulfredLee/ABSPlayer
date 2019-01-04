@@ -325,8 +325,7 @@ std::string dashSegmentSelector::GetSegmentURL_Video(const downloadInfo& videoDo
         if (mediaStr.find("$Number") != std::string::npos)
         {
             // get next segment number
-            uint32_t nextSegment = m_videoStatus.m_downloadTime / GetSegmentDurationMSec(videoDownloadInfo);
-            nextSegment++;
+            uint32_t nextSegment = m_videoStatus.m_numberSegment;
             if (videoDownloadInfo.SegmentTemplate.startNumber > nextSegment)
                 nextSegment = videoDownloadInfo.SegmentTemplate.startNumber;
             // get next download time
@@ -512,8 +511,7 @@ std::string dashSegmentSelector::GetSegmentURL_Audio(const downloadInfo& targetI
         if (mediaStr.find("$Number") != std::string::npos)
         {
             // get next segment number
-            uint32_t nextSegment = m_audioStatus.m_downloadTime / GetSegmentDurationMSec(targetInfo);
-            nextSegment++;
+            uint32_t nextSegment = m_videoStatus.m_numberSegment;
             if (targetInfo.SegmentTemplate.startNumber > nextSegment)
                 nextSegment = targetInfo.SegmentTemplate.startNumber;
             // get next download time
