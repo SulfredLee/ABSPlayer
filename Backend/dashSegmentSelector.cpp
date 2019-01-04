@@ -223,7 +223,8 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_Video(uint32_t targetDownloadS
     std::vector<dash::mpd::IPeriod *> periods = m_mpdFile->GetPeriods();
     for (size_t i = 0; i < periods.size(); i++) // loop for every period
     {
-        std::vector<dash::mpd::IAdaptationSet *> adaptationsSets = periods[i]->GetAdaptationSets();
+        dash::mpd::IPeriod* period = periods[i];
+        std::vector<dash::mpd::IAdaptationSet *> adaptationsSets = period->GetAdaptationSets();
         for (size_t j = 0; j < adaptationsSets.size(); j++) // loop for every adaptation set
         {
             dash::mpd::IAdaptationSet* adaptationSet = adaptationsSets[j];
@@ -244,15 +245,15 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_Video(uint32_t targetDownloadS
                         if (selectedDownloadSize < segmentSize && segmentSize < targetDownloadSize) // if bandwidth is sutiable
                         {
                             selectedDownloadSize = segmentSize;
-                            resultInfo = GetDownloadInfo_priv_Video(adaptationSet, segmentTemplate, representation);
+                            resultInfo = GetDownloadInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
                         }
                         if (lowestQualityInfo.Representation.bandwidth > bandwidth)
                         {
-                            lowestQualityInfo = GetDownloadInfo_priv_Video(adaptationSet, segmentTemplate, representation);
+                            lowestQualityInfo = GetDownloadInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
                         }
                         if (highestQualityInfo.Representation.bandwidth < bandwidth)
                         {
-                            highestQualityInfo = GetDownloadInfo_priv_Video(adaptationSet, segmentTemplate, representation);
+                            highestQualityInfo = GetDownloadInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
                         }
                     }
                 }
@@ -294,7 +295,7 @@ std::string dashSegmentSelector::GetInitFileURL_Video(const downloadInfo& target
 {
     std::stringstream ss;
     ss << targetInfo.BaseURL;
-
+    ss << targetInfo.Period.BaseURL;
     ss << targetInfo.AdaptationSet.BaseURL;
     if (targetInfo.SegmentTemplate.initialization.find("$RepresentationID$") != std::string::npos)
     {
@@ -314,7 +315,7 @@ std::string dashSegmentSelector::GetSegmentURL_Video(const downloadInfo& videoDo
 {
     std::stringstream ss;
     ss << videoDownloadInfo.BaseURL;
-
+    ss << videoDownloadInfo.Period.BaseURL;
     ss << videoDownloadInfo.AdaptationSet.BaseURL;
     if (videoDownloadInfo.SegmentTemplate.media.find("$RepresentationID$") != std::string::npos)
     {
@@ -403,7 +404,8 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_Audio(uint32_t targetDownloadS
     std::vector<dash::mpd::IPeriod *> periods = m_mpdFile->GetPeriods();
     for (size_t i = 0; i < periods.size(); i++) // loop for every period
     {
-        std::vector<dash::mpd::IAdaptationSet *> adaptationsSets = periods[i]->GetAdaptationSets();
+        dash::mpd::IPeriod* period = periods[i];
+        std::vector<dash::mpd::IAdaptationSet *> adaptationsSets = period->GetAdaptationSets();
         for (size_t j = 0; j < adaptationsSets.size(); j++) // loop for every adaptation set
         {
             dash::mpd::IAdaptationSet* adaptationSet = adaptationsSets[j];
@@ -427,15 +429,15 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_Audio(uint32_t targetDownloadS
                             if (selectedDownloadSize < segmentSize && segmentSize < targetDownloadSize) // if bandwidth is sutiable
                             {
                                 selectedDownloadSize = segmentSize;
-                                resultInfo = GetDownloadInfo_priv_Audio(adaptationSet, segmentTemplate, representation);
+                                resultInfo = GetDownloadInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
                             }
                             if (lowestQualityInfo.Representation.bandwidth > bandwidth)
                             {
-                                lowestQualityInfo = GetDownloadInfo_priv_Audio(adaptationSet, segmentTemplate, representation);
+                                lowestQualityInfo = GetDownloadInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
                             }
                             if (highestQualityInfo.Representation.bandwidth < bandwidth)
                             {
-                                highestQualityInfo = GetDownloadInfo_priv_Audio(adaptationSet, segmentTemplate, representation);
+                                highestQualityInfo = GetDownloadInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
                             }
                         }
                     }
@@ -479,7 +481,7 @@ std::string dashSegmentSelector::GetInitFileURL_Audio(const downloadInfo& target
     std::stringstream ss;
     dash::mpd::IBaseUrl* baseURL = m_mpdFile->GetMPDPathBaseUrl();
     ss << baseURL->GetUrl() << "/";
-
+    ss << targetInfo.Period.BaseURL;
     ss << targetInfo.AdaptationSet.BaseURL;
     if (targetInfo.SegmentTemplate.initialization.find("$RepresentationID$") != std::string::npos)
     {
@@ -500,7 +502,7 @@ std::string dashSegmentSelector::GetSegmentURL_Audio(const downloadInfo& targetI
     std::stringstream ss;
     dash::mpd::IBaseUrl* baseURL = m_mpdFile->GetMPDPathBaseUrl();
     ss << baseURL->GetUrl() << "/";
-
+    ss << targetInfo.Period.BaseURL;
     ss << targetInfo.AdaptationSet.BaseURL;
     if (targetInfo.SegmentTemplate.media.find("$RepresentationID$") != std::string::npos)
     {
@@ -578,13 +580,18 @@ uint32_t dashSegmentSelector::GetTargetDownloadSize(const dashMediaStatus& media
     return availableDownloadSize;
 }
 
-downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Audio(dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
+downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Audio(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
 {
     downloadInfo resultInfo;
 
     dash::mpd::IBaseUrl* BaseURL = m_mpdFile->GetMPDPathBaseUrl();
     resultInfo.BaseURL = BaseURL->GetUrl() + "/";
 
+    // handle period
+    resultInfo.Period.BaseURL = period->GetBaseURLs().size() ? period->GetBaseURLs()[0]->GetUrl() : std::string();
+    AppendSlash2Path(resultInfo.Period.BaseURL);
+    resultInfo.Period.duration = period->GetDuration();
+    resultInfo.Period.start = period->GetStart();
     // handle representation
     resultInfo.Representation.bandwidth = representation->GetBandwidth();
     resultInfo.Representation.id = representation->GetId();
@@ -603,13 +610,18 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Audio(dash::mpd::IAdaptat
     return resultInfo;
 }
 
-downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Video(dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
+downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Video(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
 {
     downloadInfo resultInfo;
 
     dash::mpd::IBaseUrl* BaseURL = m_mpdFile->GetMPDPathBaseUrl();
     resultInfo.BaseURL = BaseURL->GetUrl() + "/";
 
+    // handle period
+    resultInfo.Period.BaseURL = period->GetBaseURLs().size() ? period->GetBaseURLs()[0]->GetUrl() : std::string();
+    AppendSlash2Path(resultInfo.Period.BaseURL);
+    resultInfo.Period.duration = period->GetDuration();
+    resultInfo.Period.start = period->GetStart();
     // handle representation
     resultInfo.Representation.bandwidth = representation->GetBandwidth();
     resultInfo.Representation.id = representation->GetId();
@@ -718,4 +730,10 @@ std::vector<uint32_t> dashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmen
         }
     }
     return result;
+}
+
+void dashSegmentSelector::AppendSlash2Path(std::string& inPath)
+{
+    if (inPath.size() && inPath.back() != '/')
+        inPath.push_back('/');
 }

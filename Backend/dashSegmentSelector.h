@@ -14,6 +14,7 @@
 
 struct MPD_Period
 {
+    std::string BaseURL;
     std::string duration;
     std::string start;
 };
@@ -94,7 +95,7 @@ class dashSegmentSelector : public segmentSelector
     std::string GetDownloadURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
     std::string GetInitFileURL_Video(const downloadInfo& targetInfo);
     std::string GetSegmentURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
-    downloadInfo GetDownloadInfo_priv_Video(dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
+    downloadInfo GetDownloadInfo_priv_Video(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
 
     // audio
     uint32_t GetTargetDownloadSize_Audio();
@@ -102,7 +103,7 @@ class dashSegmentSelector : public segmentSelector
     std::string GetDownloadURL_Audio(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
     std::string GetInitFileURL_Audio(const downloadInfo& targetInfo);
     std::string GetSegmentURL_Audio(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
-    downloadInfo GetDownloadInfo_priv_Audio(dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
+    downloadInfo GetDownloadInfo_priv_Audio(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
@@ -110,6 +111,7 @@ class dashSegmentSelector : public segmentSelector
     uint32_t GetSegmentDurationMSec(const downloadInfo& inDownloadInfo);
     uint32_t GetSegmentTimeMSec(const uint64_t& inTime, const downloadInfo& inDownloadInfo);
     bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
+    void AppendSlash2Path(std::string& inPath);
  private:
     DefaultMutex m_mutex;
     std::shared_ptr<dash::mpd::IMPD> m_mpdFile;
