@@ -21,7 +21,8 @@ DOMParser::DOMParser    (std::string url) :
 {
     this->Init();
 }
-DOMParser::DOMParser    (const std::vector<unsigned char>& inXmlFile) :
+DOMParser::DOMParser    (std::string url, const std::vector<unsigned char>& inXmlFile) :
+           url          (url),
            xmlFile      (inXmlFile),
            reader       (NULL),
            root         (NULL)

@@ -51,7 +51,7 @@ size_t fileDownloader::WriteFunction(void *contents, size_t size, size_t nmemb, 
 
 void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_INFO("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     switch(msg->GetMsgType())
     {
@@ -116,7 +116,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
         LOGMSG_INFO("%lu bytes retrieved, time spent: %f", msg->GetFileLength(), countTimer.GetSecondDouble());
 
         dash::IDASHManager* dashManager = CreateDashManager();
-        dash::mpd::IMPD* mpdFile = dashManager->Open(msg->GetFile());
+        dash::mpd::IMPD* mpdFile = dashManager->Open(const_cast<char*>(msg->GetURL().c_str()), msg->GetFile());
         msg->SetMPDFile(mpdFile);
 
         // finished download and alert manager
@@ -148,7 +148,7 @@ void fileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::
 // override
 bool fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_INFO("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     bool ret = true;
     switch(msg->GetMsgType())

@@ -17,6 +17,7 @@ struct MPD_Period
     std::string BaseURL;
     std::string duration;
     std::string start;
+    std::string id;
 };
 
 struct MPD_AdaptationSet
@@ -58,6 +59,9 @@ struct dashMediaStatus
     uint64_t m_downloadTime; // location that is already downloaded
     uint64_t m_playTime; // location that is already played
     uint32_t m_numberSegment;
+    uint64_t m_mediaStartTime;
+    uint64_t m_mediaEndTime;
+    std::string m_prePeriodID;
     downloadInfo m_downloadInfo;
 };
 
@@ -86,12 +90,18 @@ class dashSegmentSelector : public segmentSelector
     // video and audio
     uint32_t GetTargetDownloadSize(const dashMediaStatus& mediaStatus, std::string mediaType);
     std::vector<uint32_t> GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate);
-    bool IsEOS(const uint64_t& nextDownloadTime, const downloadInfo& inDownloadInfo);
-    bool IsBOS(const uint64_t& nextDownloadTime, const downloadInfo& inDownloadInfo);
+    bool IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
+    bool IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
+    bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
+    uint32_t GetSegmentDurationMSec(const downloadInfo& inDownloadInfo);
+    uint32_t GetSegmentTimeMSec(const uint64_t& inTime, const downloadInfo& inDownloadInfo);
+    void AppendSlash2Path(std::string& inPath);
+    void HandleStringFormat(std::string& mediaStr, uint32_t data, std::string target);
+    void HandleBaseURL(std::stringstream& ss, const downloadInfo& targetInfo);
 
     // video
     uint32_t GetTargetDownloadSize_Video();
-    downloadInfo GetDownloadInfo_Video(uint32_t targetDownloadSize);
+    segmentSelectorRet GetDownloadInfo_Video(uint32_t targetDownloadSize, downloadInfo& resultInfo);
     std::string GetDownloadURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
     std::string GetInitFileURL_Video(const downloadInfo& targetInfo);
     std::string GetSegmentURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
@@ -99,7 +109,7 @@ class dashSegmentSelector : public segmentSelector
 
     // audio
     uint32_t GetTargetDownloadSize_Audio();
-    downloadInfo GetDownloadInfo_Audio(uint32_t targetDownloadSize);
+    segmentSelectorRet GetDownloadInfo_Audio(uint32_t targetDownloadSize, downloadInfo& resultInfo);
     std::string GetDownloadURL_Audio(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
     std::string GetInitFileURL_Audio(const downloadInfo& targetInfo);
     std::string GetSegmentURL_Audio(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime);
@@ -108,10 +118,6 @@ class dashSegmentSelector : public segmentSelector
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
     void ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to);
-    uint32_t GetSegmentDurationMSec(const downloadInfo& inDownloadInfo);
-    uint32_t GetSegmentTimeMSec(const uint64_t& inTime, const downloadInfo& inDownloadInfo);
-    bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
-    void AppendSlash2Path(std::string& inPath);
  private:
     DefaultMutex m_mutex;
     std::shared_ptr<dash::mpd::IMPD> m_mpdFile;

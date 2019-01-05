@@ -40,7 +40,7 @@ namespace dash
              *  @param      xmlFile    A memory buffer storing a MPD file
              *  @return     a pointer to an dash::mpd::IMPD object
              */
-            virtual mpd::IMPD* Open (const std::vector<unsigned char>& xmlFile) = 0;
+            virtual mpd::IMPD* Open (char *path, const std::vector<unsigned char>& xmlFile) = 0;
 
             /**
              *  Frees allocated memory and deletes the DashManager

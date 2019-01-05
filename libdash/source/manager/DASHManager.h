@@ -30,7 +30,7 @@ namespace dash
             virtual ~DASHManager      ();
 
             mpd::IMPD*  Open          (char *path);
-            mpd::IMPD*  Open    (const std::vector<unsigned char>& xmlFile);
+            mpd::IMPD*  Open          (char *path, const std::vector<unsigned char>& xmlFile);
             void        Delete        ();
     };
 }

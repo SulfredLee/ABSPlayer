@@ -37,7 +37,7 @@ namespace dash
         {
             public:
                 DOMParser           (std::string url);
-                DOMParser           (const std::vector<unsigned char>& xmlFile);
+                DOMParser           (std::string url, const std::vector<unsigned char>& xmlFile);
                 virtual ~DOMParser  ();
 
                 bool    Parse                 ();

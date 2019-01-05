@@ -14,7 +14,7 @@ segmentSelector::~segmentSelector()
 
 void segmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_INFO("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     switch(msg->GetMsgType())
     {
@@ -75,7 +75,7 @@ void segmentSelector::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
 // override
 bool segmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_INFO("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     bool ret = true;
     switch(msg->GetMsgType())

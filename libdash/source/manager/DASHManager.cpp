@@ -39,9 +39,9 @@ IMPD*           DASHManager::Open          (char *path)
 
     return mpd;
 }
-mpd::IMPD*      DASHManager::Open    (const std::vector<unsigned char>& xmlFile)
+mpd::IMPD*      DASHManager::Open    (char *path, const std::vector<unsigned char>& xmlFile)
 {
-    DOMParser parser(xmlFile);
+    DOMParser parser(path, xmlFile);
 
     uint32_t fetchTime = Time::GetCurrentUTCTimeInSec();
 
