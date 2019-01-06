@@ -151,3 +151,9 @@ bool Logger::OpenLogFile()
         }
     }
 }
+
+std::string Logger::GetFileName(const std::string& fullPath)
+{
+    size_t found = fullPath.find_last_of("/\\");
+    return fullPath.substr(found + 1);
+}
