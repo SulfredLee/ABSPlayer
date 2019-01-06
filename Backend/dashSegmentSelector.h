@@ -41,6 +41,7 @@ struct MPD_Representation
 {
     uint32_t bandwidth;
     std::string id;
+    std::string BaseURL;
 };
 
 struct downloadInfo
@@ -50,6 +51,7 @@ struct downloadInfo
     MPD_AdaptationSet AdaptationSet;
     MPD_SegmentTemplate SegmentTemplate;
     MPD_Representation Representation;
+    bool isHasSegmentTemplate;
 };
 
 struct dashMediaStatus
