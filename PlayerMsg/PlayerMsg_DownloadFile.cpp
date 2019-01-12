@@ -1,7 +1,9 @@
 #include "PlayerMsg_DownloadFile.h"
 
 PlayerMsg_DownloadFile::PlayerMsg_DownloadFile()
-{}
+{
+    m_fileCount = 0;
+}
 
 PlayerMsg_DownloadFile::~PlayerMsg_DownloadFile()
 {}
@@ -34,6 +36,11 @@ void PlayerMsg_DownloadFile::SetFile(unsigned char* data, size_t dataLength)
     m_file.insert(m_file.end(), data, data + dataLength);
 }
 
+void PlayerMsg_DownloadFile::SetFileCount(size_t count)
+{
+    m_fileCount = count;
+}
+
 void PlayerMsg_DownloadFile::ClearFile()
 {
     m_file.clear();
@@ -47,6 +54,11 @@ std::string PlayerMsg_DownloadFile::GetURL()
 std::vector<unsigned char> PlayerMsg_DownloadFile::GetFile()
 {
     return m_file;
+}
+
+size_t PlayerMsg_DownloadFile::GetFileCount()
+{
+    return m_fileCount;
 }
 
 size_t PlayerMsg_DownloadFile::GetFileLength()

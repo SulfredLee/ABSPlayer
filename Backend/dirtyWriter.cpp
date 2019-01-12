@@ -25,7 +25,7 @@ void dirtyWriter::InitComponent()
 
 void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_INFO("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     switch(msg->GetMsgType())
     {
@@ -57,7 +57,7 @@ void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
     {
         // Save file to disk
         std::vector<unsigned char> file = msg->GetFile();
-        SaveFile(fileURL, file);
+        SaveFile(fileURL, file, msg->GetFileCount() ? true : false);
     }
 }
 
@@ -74,7 +74,7 @@ void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
     {
         // Save file to disk
         std::vector<unsigned char> file = msg->GetFile();
-        SaveFile(fileURL, file);
+        SaveFile(fileURL, file, msg->GetFileCount() ? true : false);
     }
 }
 
@@ -119,9 +119,13 @@ bool dirtyWriter::makePath(const std::string& path)
     }
 }
 
-void dirtyWriter::SaveFile(std::string fileName, const std::vector<unsigned char>& file)
+void dirtyWriter::SaveFile(std::string fileName, const std::vector<unsigned char>& file, bool isAppend)
 {
-    std::fstream FHout = std::fstream(fileName, std::ios::out | std::ios::binary);
+    std::fstream FHout;
+    if (isAppend)
+        FHout = std::fstream(fileName, std::ios::app | std::ios::binary);
+    else
+        FHout = std::fstream(fileName, std::ios::out | std::ios::binary);
     FHout.write((char*)&file[0], file.size());
     FHout.close();
 }
@@ -162,7 +166,7 @@ std::string dirtyWriter::GetFileName(const std::string& fullPath)
 // override
 bool dirtyWriter::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_INFO("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     bool ret = true;
     switch(msg->GetMsgType())

@@ -41,7 +41,11 @@ void mplayerManager::InitComponent()
 
 void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_INFO("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    if (m_lastMsgType != msg->GetMsgType())
+    {
+        LOGMSG_INFO("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+        m_lastMsgType = msg->GetMsgType();
+    }
 
     switch(msg->GetMsgType())
     {
@@ -118,7 +122,7 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
 // override
 bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_INFO("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     bool ret = true;
     switch(msg->GetMsgType())
@@ -195,6 +199,10 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                     std::shared_ptr<PlayerMsg_DownloadFinish> msgFinish = std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg);
                     msgNext->SetSegmentType(msgFinish->GetFileType());
                     m_segmentSelector->UpdateCMD(msgNext);
+                }
+                if (!m_dirtyWriter.UpdateCMD(msg))
+                {
+                    m_eventTimer.AddEvent(msg, 100, false); // try to process this message later
                 }
                 break;
             }

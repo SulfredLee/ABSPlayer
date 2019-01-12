@@ -32,7 +32,7 @@ class dirtyWriter : public linuxThread, public cmdReceiver
     std::string GetFileName(const std::string& fillPath);
     bool isDirExist(const std::string& path);
     bool makePath(const std::string& path);
-    void SaveFile(std::string fileName, const std::vector<unsigned char>& file);
+    void SaveFile(std::string fileName, const std::vector<unsigned char>& file, bool isAppend);
  private:
     playerMsgQ m_msgQ;
     PlayerMsg_Factory m_msgFactory;
