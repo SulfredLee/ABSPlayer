@@ -41,6 +41,11 @@ void PlayerMsg_DownloadFile::SetFileCount(size_t count)
     m_fileCount = count;
 }
 
+void PlayerMsg_DownloadFile::SetResponseCode(int32_t responseCode)
+{
+    m_responseCode = responseCode;
+}
+
 void PlayerMsg_DownloadFile::ClearFile()
 {
     m_file.clear();
@@ -74,4 +79,9 @@ void PlayerMsg_DownloadFile::SetDownloadTime(uint64_t downloadTime)
 uint64_t PlayerMsg_DownloadFile::GetDownloadTime()
 {
     return m_downloadTime;
+}
+
+int32_t PlayerMsg_DownloadFile::GetResponseCode()
+{
+    return m_responseCode;
 }

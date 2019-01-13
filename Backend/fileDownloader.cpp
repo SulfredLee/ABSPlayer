@@ -105,7 +105,8 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
 {
     CountTimer countTimer;
-    CURLcode res = DownloadAFile(msg, countTimer);
+    int32_t responseCode;
+    CURLcode res = DownloadAFile(msg, countTimer, responseCode);
     /* check for errors */
     if(res != CURLE_OK)
     {
@@ -120,7 +121,9 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
          * Do something nice with it!
          */
 
-        LOGMSG_INFO("%lu bytes retrieved, time spent: %f", msg->GetFileLength() ? msg->GetFileLength() : m_msgPoolSize, countTimer.GetSecondDouble());
+        LOGMSG_INFO("%lu bytes retrieved, time spent: %f responseCode: %u", msg->GetFileLength() ? msg->GetFileLength() : m_msgPoolSize, countTimer.GetSecondDouble(), responseCode);
+
+        msg->SetResponseCode(responseCode);
 
         // finished download and alert manager
         SendDownloadFinishedMsg(countTimer, msg);
@@ -130,7 +133,8 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
 void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 {
     CountTimer countTimer;
-    CURLcode res = DownloadAFile(msg, countTimer);
+    int32_t responseCode;
+    CURLcode res = DownloadAFile(msg, countTimer, responseCode);
     /* check for errors */
     if(res != CURLE_OK)
     {
@@ -145,7 +149,9 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
          * Do something nice with it!
          */
 
-        LOGMSG_INFO("%lu bytes retrieved, time spent: %f", msg->GetFileLength(), countTimer.GetSecondDouble());
+        LOGMSG_INFO("%lu bytes retrieved, time spent: %f responseCode: %u", msg->GetFileLength(), countTimer.GetSecondDouble(), responseCode);
+
+        msg->SetResponseCode(responseCode);
 
         dash::IDASHManager* dashManager = CreateDashManager();
         dash::mpd::IMPD* mpdFile = dashManager->Open(const_cast<char*>(msg->GetURL().c_str()), msg->GetFile());
@@ -161,7 +167,8 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
     CountTimer countTimer;
-    CURLcode res = DownloadAFile(msg, countTimer);
+    int32_t responseCode;
+    CURLcode res = DownloadAFile(msg, countTimer, responseCode);
     /* check for errors */
     if(res != CURLE_OK)
     {
@@ -176,7 +183,9 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
          * Do something nice with it!
          */
 
-        LOGMSG_INFO("%lu bytes retrieved, time spent: %f", msg->GetFileLength(), countTimer.GetSecondDouble());
+        LOGMSG_INFO("%lu bytes retrieved, time spent: %f, responseCode: %u", msg->GetFileLength(), countTimer.GetSecondDouble(), responseCode);
+
+        msg->SetResponseCode(responseCode);
 
         dash::IDASHManager* dashManager = CreateDashManager();
         dash::mpd::IMPD* mpdFile = dashManager->Open(const_cast<char*>(msg->GetURL().c_str()), msg->GetFile());
@@ -209,6 +218,7 @@ void fileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::
     msgFinish->SetTimeSpent(countTimer.GetMSecond());
     msgFinish->SetFileType(msg->GetMsgType());
     msgFinish->SetDownloadTime(msg->GetDownloadTime());
+    msgFinish->SetResponseCode(msg->GetResponseCode());
 
     SendToManager(msgFinish);
 }
@@ -258,7 +268,7 @@ void* fileDownloader::Main()
     return NULL;
 }
 
-CURLcode fileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> msg, CountTimer& countTimer)
+CURLcode fileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> msg, CountTimer& countTimer, int32_t& responseCode)
 {
     // handle message pool so that we can download and process part of the message
     m_msgPool = msg;
@@ -285,5 +295,6 @@ CURLcode fileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> m
     res = curl_easy_perform(m_curl_handle);
     countTimer.Stop();
 
+    res = curl_easy_getinfo(m_curl_handle, CURLINFO_RESPONSE_CODE, &responseCode);
     return res;
 }

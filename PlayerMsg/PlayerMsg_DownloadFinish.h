@@ -20,6 +20,7 @@ class PlayerMsg_DownloadFinish : public PlayerMsg_Base
     void SetSpeed(uint32_t speed);
     void SetTimeSpent(uint32_t timeSpent);
     void SetDownloadTime(uint64_t downloadTime);
+    void SetResponseCode(int32_t responseCode);
 
     PlayerMsg_Type GetFileType();
     std::string GetFileName();
@@ -27,6 +28,7 @@ class PlayerMsg_DownloadFinish : public PlayerMsg_Base
     uint32_t GetSpeed();
     uint32_t GetTimeSpent();
     uint64_t GetDownloadTime();
+    int32_t GetResponseCode();
  private:
     PlayerMsg_Type m_downloadedFileType;
     std::string m_downloadedFileName;
@@ -34,6 +36,7 @@ class PlayerMsg_DownloadFinish : public PlayerMsg_Base
     uint32_t m_downloadedSpeed; // Byte per sec
     uint32_t m_downloadedTimeSpent; // MSec
     uint64_t m_downloadTime;
+    int32_t m_responseCode;
 };
 
 #endif

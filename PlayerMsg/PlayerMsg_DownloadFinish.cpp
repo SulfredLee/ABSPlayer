@@ -78,7 +78,17 @@ void PlayerMsg_DownloadFinish::SetDownloadTime(uint64_t downloadTime)
     m_downloadTime = downloadTime;
 }
 
+void PlayerMsg_DownloadFinish::SetResponseCode(int32_t responseCode)
+{
+    m_responseCode = responseCode;
+}
+
 uint64_t PlayerMsg_DownloadFinish::GetDownloadTime()
 {
     return m_downloadTime;
+}
+
+int32_t PlayerMsg_DownloadFinish::GetResponseCode()
+{
+    return m_responseCode;
 }

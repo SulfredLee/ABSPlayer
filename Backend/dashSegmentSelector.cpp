@@ -88,22 +88,28 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> m
     {
         case PlayerMsg_Type_DownloadVideo:
             {
-                m_videoStatus.m_downloadSpeed = msg->GetSpeed();
-                m_videoStatus.m_downloadTime = msg->GetDownloadTime();
-                if (!m_videoStatus.m_initFileReady)
-                    m_videoStatus.m_initFileReady = true;
-                else
-                    m_videoStatus.m_numberSegment++;
+                if (msg->GetResponseCode() == 200)
+                {
+                    m_videoStatus.m_downloadSpeed = msg->GetSpeed();
+                    m_videoStatus.m_downloadTime = msg->GetDownloadTime();
+                    if (!m_videoStatus.m_initFileReady)
+                        m_videoStatus.m_initFileReady = true;
+                    else
+                        m_videoStatus.m_numberSegment++;
+                }
                 break;
             }
         case PlayerMsg_Type_DownloadAudio:
             {
-                m_audioStatus.m_downloadSpeed = msg->GetSpeed();
-                m_audioStatus.m_downloadTime = msg->GetDownloadTime();
-                if (!m_audioStatus.m_initFileReady)
-                    m_audioStatus.m_initFileReady = true;
-                else
-                    m_audioStatus.m_numberSegment++;
+                if (msg->GetResponseCode() == 200)
+                {
+                    m_audioStatus.m_downloadSpeed = msg->GetSpeed();
+                    m_audioStatus.m_downloadTime = msg->GetDownloadTime();
+                    if (!m_audioStatus.m_initFileReady)
+                        m_audioStatus.m_initFileReady = true;
+                    else
+                        m_audioStatus.m_numberSegment++;
+                }
                 break;
             }
         case PlayerMsg_Type_DownloadSubtitle:
