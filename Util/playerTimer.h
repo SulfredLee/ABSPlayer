@@ -28,9 +28,11 @@ class playerTimer : public linuxThread
     void InitComponent(playerMsgQ* msgQ);
     void DeinitComponent();
     void AddEvent(PlayerMsg_Type msgType, uint64_t timeMSec, bool repeat);
-    void AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec, bool repeat);
+    void AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec);
+    void RemoveEvent(PlayerMsg_Type msgType);
  private:
     uint64_t GetCurrentMSec();
+    void AddEvent_priv(const uint64_t& targetTime, const playerTimerEvent& tempEvent);
     // override
     void* Main();
  private:

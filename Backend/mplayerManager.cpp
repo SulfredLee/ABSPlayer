@@ -129,7 +129,7 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
     {
         case PlayerMsg_Type_DownloadMPD:
             {
-                std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::static_pointer_cast<PlayerMsg_DownloadMPD>(msg);
+                std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg);
                 if (msgMPD->IsMPDFileEmpty())
                 {
                     LOGMSG_ERROR("Cannot download abs file");
@@ -155,7 +155,7 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
             {
                 PlayerStage stage = PlayerStage_Stop;
                 m_playerStatus.ProcessStatusCMD(StatusCMD_Get_Stage, static_cast<void*>(&stage));
-                std::shared_ptr<PlayerMsg_GetPlayerStage> msgStage = std::static_pointer_cast<PlayerMsg_GetPlayerStage>(msg);
+                std::shared_ptr<PlayerMsg_GetPlayerStage> msgStage = std::dynamic_pointer_cast<PlayerMsg_GetPlayerStage>(msg);
                 msgStage->SetPlayerStage(stage);
                 break;
             }
@@ -169,7 +169,7 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                 {
                     if (!m_dirtyWriter.UpdateCMD(msg))
                     {
-                        m_eventTimer.AddEvent(msg, 100, false); // try to process this message later
+                        m_eventTimer.AddEvent(msg, 100); // try to process this message later
                     }
                 }
                 break;
@@ -184,7 +184,7 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                 {
                     if (!m_dirtyWriter.UpdateCMD(msg))
                     {
-                        m_eventTimer.AddEvent(msg, 100, false); // try to process this message later
+                        m_eventTimer.AddEvent(msg, 100); // try to process this message later
                     }
                 }
                 break;
@@ -202,7 +202,19 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                 }
                 if (!m_dirtyWriter.UpdateCMD(msg))
                 {
-                    m_eventTimer.AddEvent(msg, 100, false); // try to process this message later
+                    m_eventTimer.AddEvent(msg, 100); // try to process this message later
+                }
+                break;
+            }
+        case PlayerMsg_Type_RefreshMPD:
+            {
+                if (msg->GetSender() == "segmentSelector")
+                {
+                    m_mpdDownloader.UpdateCMD(msg);
+                }
+                else if (msg->GetSender() == "fileDownloader")
+                {
+                    if(m_segmentSelector) m_segmentSelector->UpdateCMD(msg);
                 }
                 break;
             }

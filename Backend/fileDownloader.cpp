@@ -94,6 +94,9 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
         case PlayerMsg_Type_DownloadMPD:
             ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg));
             break;
+        case PlayerMsg_Type_RefreshMPD:
+            ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(msg));
+            break;
         default:
             break;
     }
@@ -125,6 +128,37 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
 }
 
 void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+{
+    CountTimer countTimer;
+    CURLcode res = DownloadAFile(msg, countTimer);
+    /* check for errors */
+    if(res != CURLE_OK)
+    {
+        LOGMSG_ERROR("curl_easy_perform() failed: %s", curl_easy_strerror(res));
+    }
+    else
+    {
+        /*
+         * Now, our chunk.memory points to a memory block that is chunk.size
+         * bytes big and contains the remote file.
+         *
+         * Do something nice with it!
+         */
+
+        LOGMSG_INFO("%lu bytes retrieved, time spent: %f", msg->GetFileLength(), countTimer.GetSecondDouble());
+
+        dash::IDASHManager* dashManager = CreateDashManager();
+        dash::mpd::IMPD* mpdFile = dashManager->Open(const_cast<char*>(msg->GetURL().c_str()), msg->GetFile());
+        msg->SetMPDFile(mpdFile);
+        delete dashManager;
+
+        // finished download and alert manager
+        SendToManager(msg);
+        SendDownloadFinishedMsg(countTimer, msg);
+    }
+}
+
+void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
     CountTimer countTimer;
     CURLcode res = DownloadAFile(msg, countTimer);
@@ -192,6 +226,7 @@ bool fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
         case PlayerMsg_Type_DownloadVideo:
         case PlayerMsg_Type_DownloadAudio:
         case PlayerMsg_Type_DownloadSubtitle:
+        case PlayerMsg_Type_RefreshMPD:
             {
                 if (!m_msgQ.AddMsg(msg))
                 {

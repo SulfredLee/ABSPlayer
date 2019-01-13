@@ -6,6 +6,7 @@
 #include "PlayerMsg_Common.h"
 #include "playerStatus.h"
 #include "PlayerMsg_Factory.h"
+#include "playerTimer.h"
 
 #include <memory>
 
@@ -31,6 +32,7 @@ class segmentSelector : public linuxThread, public cmdReceiver
     bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
  protected:
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
+    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg);
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg) = 0;
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg) = 0;
     virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg) = 0;
@@ -44,6 +46,7 @@ class segmentSelector : public linuxThread, public cmdReceiver
     void* Main();
  protected:
     PlayerMsg_Factory m_msgFactory;
+    playerTimer m_eventTimer;
  private:
     cmdReceiver* m_manager;
     playerMsgQ m_msgQ;

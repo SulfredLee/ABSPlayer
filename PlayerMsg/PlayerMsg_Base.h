@@ -18,6 +18,7 @@ enum PlayerMsg_Type
     PlayerMsg_Type_DownloadSubtitle,
     PlayerMsg_Type_DownloadFinish,
     PlayerMsg_Type_ProcessNextSegment,
+    PlayerMsg_Type_RefreshMPD,
     PlayerMsg_Type_End
 };
 

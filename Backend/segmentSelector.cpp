@@ -7,6 +7,7 @@ segmentSelector::segmentSelector()
 
 segmentSelector::~segmentSelector()
 {
+    m_eventTimer.DeinitComponent();
     stopThread();
     std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
     m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
@@ -38,6 +39,11 @@ void segmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
                 ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg));
                 break;
             }
+        case PlayerMsg_Type_RefreshMPD:
+            {
+                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(msg));
+                break;
+            }
         case PlayerMsg_Type_DownloadFinish:
             {
                 ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg));
@@ -58,11 +64,17 @@ void segmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
     LOGMSG_INFO("Dummy Process message %s", msg->GetMsgTypeName().c_str());
 }
 
+void segmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+{
+    LOGMSG_INFO("Dummy Process message %s", msg->GetMsgTypeName().c_str());
+}
+
 void segmentSelector::InitComponent(cmdReceiver* manager)
 {
     LOGMSG_INFO("IN");
     m_manager = manager;
     m_msgQ.InitComponent(5 * 1024 * 1024);
+    m_eventTimer.InitComponent(&m_msgQ);
     startThread();
 }
 
@@ -82,6 +94,7 @@ bool segmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
     {
         case PlayerMsg_Type_ProcessNextSegment:
         case PlayerMsg_Type_DownloadMPD:
+        case PlayerMsg_Type_RefreshMPD:
         case PlayerMsg_Type_DownloadFinish:
         case PlayerMsg_Type_Play:
         case PlayerMsg_Type_Pause:
