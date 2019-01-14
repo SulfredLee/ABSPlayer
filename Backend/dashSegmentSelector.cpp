@@ -124,6 +124,7 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegmen
     {
         case PlayerMsg_Type_DownloadVideo:
             {
+                LOGMSG_INFO("suflred debug handle video");
                 HandleVideoSegment();
                 break;
             }
@@ -509,7 +510,6 @@ std::string dashSegmentSelector::GetSegmentURL_Video_Dynamic(const downloadInfo&
             if (m_videoStatus.m_numberSegment == 0)
                 m_videoStatus.m_numberSegment = (now - 5) / videoDownloadInfo.SegmentTemplate.duration;
             nextSegment = m_videoStatus.m_numberSegment;
-            LOGMSG_INFO("sulfred debug nextSegment: %u now: %lu duration: %u", nextSegment, now, videoDownloadInfo.SegmentTemplate.duration);
             // get next download time
             nextDownloadTime = now;
 

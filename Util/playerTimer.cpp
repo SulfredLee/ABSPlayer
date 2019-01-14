@@ -49,7 +49,7 @@ void playerTimer::RemoveEvent(PlayerMsg_Type msgType)
     DefaultLock lock(&m_mutex);
     for (std::map<uint64_t, playerTimerEvent>::iterator it = m_eventQ.begin(); it != m_eventQ.end(); it++)
     {
-        if (it->second.m_msgType == msgType)
+        if (IsNonRepeatType(it->second.m_msgType) && it->second.m_msgType == msgType)
         {
             m_eventQ.erase(it);
             break;
@@ -64,6 +64,19 @@ uint64_t playerTimer::GetCurrentMSec()
 
     uint64_t timeMSec = (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
     return timeMSec;
+}
+
+bool playerTimer::IsNonRepeatType(PlayerMsg_Type msgType)
+{
+    switch (msgType)
+    {
+        case PlayerMsg_Type_Pause:
+        case PlayerMsg_Type_Play:
+        case PlayerMsg_Type_Stop:
+            return true;
+        default:
+            return false;
+    }
 }
 
 void playerTimer::AddEvent_priv(const uint64_t& targetTime, const playerTimerEvent& tempEvent)

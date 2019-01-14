@@ -59,6 +59,11 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
                 ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_Play>(msg));
                 break;
             }
+        case PlayerMsg_Type_ProcessNextSegment:
+            {
+                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(msg));
+                break;
+            }
         default:
             break;
     }
@@ -117,6 +122,12 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
         // wait a short time to see if the abs file is downloaded successfully
         m_eventTimer.AddEvent(PlayerMsg_Type_Play, 100, false);
     }
+}
+
+void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
+{
+    if (m_segmentSelector)
+        m_segmentSelector->UpdateCMD(msg);
 }
 
 // override
@@ -191,18 +202,23 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
             }
         case PlayerMsg_Type_DownloadFinish:
             {
-                if (m_segmentSelector)
-                {
-                    m_segmentSelector->UpdateCMD(msg);
-                    // process next segment
-                    std::shared_ptr<PlayerMsg_ProcessNextSegment> msgNext = std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
-                    std::shared_ptr<PlayerMsg_DownloadFinish> msgFinish = std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg);
-                    msgNext->SetSegmentType(msgFinish->GetFileType());
-                    m_segmentSelector->UpdateCMD(msgNext);
-                }
                 if (!m_dirtyWriter.UpdateCMD(msg))
                 {
                     m_eventTimer.AddEvent(msg, 100); // try to process this message later
+                    break;
+                }
+                if (m_segmentSelector)
+                {
+                    m_segmentSelector->UpdateCMD(msg);
+                    // check response code
+                    std::shared_ptr<PlayerMsg_DownloadFinish> msgFinish = std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg);
+                    // process next segment
+                    std::shared_ptr<PlayerMsg_ProcessNextSegment> msgNext = std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
+                    msgNext->SetSegmentType(msgFinish->GetFileType());
+                    if (msgFinish->GetResponseCode() == 200)
+                        m_segmentSelector->UpdateCMD(msgNext);
+                    else
+                        m_eventTimer.AddEvent(msgNext, 500);
                 }
                 break;
             }

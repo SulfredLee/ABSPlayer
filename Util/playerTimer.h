@@ -32,6 +32,7 @@ class playerTimer : public linuxThread
     void RemoveEvent(PlayerMsg_Type msgType);
  private:
     uint64_t GetCurrentMSec();
+    bool IsNonRepeatType(PlayerMsg_Type msgType);
     void AddEvent_priv(const uint64_t& targetTime, const playerTimerEvent& tempEvent);
     // override
     void* Main();

@@ -27,6 +27,7 @@ class mplayerManager : public linuxThread, public cmdReceiver
     void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg);
     // override
     void* Main();
  private:
