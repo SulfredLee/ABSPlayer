@@ -124,7 +124,6 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegmen
     {
         case PlayerMsg_Type_DownloadVideo:
             {
-                LOGMSG_INFO("suflred debug handle video");
                 HandleVideoSegment();
                 break;
             }

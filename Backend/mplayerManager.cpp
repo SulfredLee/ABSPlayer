@@ -218,7 +218,10 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                     if (msgFinish->GetResponseCode() == 200)
                         m_segmentSelector->UpdateCMD(msgNext);
                     else
+                    {
+                        LOGMSG_INFO("Process %s later", msg->GetMsgTypeName().c_str());
                         m_eventTimer.AddEvent(msgNext, 500);
+                    }
                 }
                 break;
             }
