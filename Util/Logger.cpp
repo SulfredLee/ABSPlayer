@@ -19,7 +19,7 @@ Logger::Logger()
     m_config.logPath = ".";
     m_config.fileSize = 0;
     m_config.fileSizeLimit = 4 * 1024 * 1024; // 4 MByte
-    m_config.isToConsole = true;
+    m_config.isToConsole = false;
     m_config.isToFile = true;
 }
 

@@ -41,7 +41,6 @@ class mplayerManager : public linuxThread, public cmdReceiver
     fileDownloader m_subtitleDownloader;
     playerStatus m_playerStatus;
     std::shared_ptr<segmentSelector> m_segmentSelector;
-    PlayerMsg_Type m_lastMsgType;
 };
 
 #endif

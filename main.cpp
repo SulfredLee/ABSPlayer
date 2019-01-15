@@ -2,6 +2,7 @@
 #include <string>
 #include "mplayerManager.h"
 #include "PlayerMsg_Common.h"
+#include "Logger.h"
 
 #include <unistd.h>
 #include <memory>
@@ -19,7 +20,8 @@ int main(int argc, char* argv[])
                   << "2: Play" << std::endl
                   << "3: Pause" << std::endl
                   << "4: Stop" << std::endl
-                  << "5: Exit" << std::endl;
+                  << "5: Debug Toggle" << std::endl
+                  << "6: Exit" << std::endl;
         int action; std::string url;
         std::cin >> action;
         switch (action)
@@ -56,6 +58,16 @@ int main(int argc, char* argv[])
                     break;
                 }
             case 5:
+                {
+                    Logger::LoggerConfig config = Logger::GetInstance().GetConfig();
+                    if (config.logLevel ==  Logger::LogLevel::DEBUG)
+                        config.logLevel = Logger::LogLevel::WARN;
+                    else
+                        config.logLevel = Logger::LogLevel::DEBUG;
+                    Logger::GetInstance().InitComponent(config);
+                    break;
+                }
+            case 6:
                 running = false;
                 break;
             default:

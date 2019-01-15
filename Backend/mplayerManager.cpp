@@ -29,10 +29,10 @@ mplayerManager::~mplayerManager()
 void mplayerManager::InitComponent()
 {
     m_msgQ.InitComponent(1024 * 1024 * 10); // 10 MByte buffer for message queue
-    m_mpdDownloader.InitComponent(static_cast<cmdReceiver*>(this));
-    m_videoDownloader.InitComponent(static_cast<cmdReceiver*>(this));
-    m_audioDownloader.InitComponent(static_cast<cmdReceiver*>(this));
-    m_subtitleDownloader.InitComponent(static_cast<cmdReceiver*>(this));
+    m_mpdDownloader.InitComponent(static_cast<cmdReceiver*>(this), "MPD_Download");
+    m_videoDownloader.InitComponent(static_cast<cmdReceiver*>(this), "Video_Download");
+    m_audioDownloader.InitComponent(static_cast<cmdReceiver*>(this), "Audio_Download");
+    m_subtitleDownloader.InitComponent(static_cast<cmdReceiver*>(this), "Subtitle_Download");
     m_playerStatus.InitComponent();
     m_eventTimer.InitComponent(&m_msgQ);
     m_dirtyWriter.InitComponent();
@@ -41,11 +41,7 @@ void mplayerManager::InitComponent()
 
 void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    if (m_lastMsgType != msg->GetMsgType())
-    {
-        LOGMSG_INFO("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
-        m_lastMsgType = msg->GetMsgType();
-    }
+    LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     switch(msg->GetMsgType())
     {
