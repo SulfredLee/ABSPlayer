@@ -64,6 +64,7 @@ void fileDownloader::SaveToPool(void *contents, size_t size)
             SendPartOfMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadSubtitle)), contents, size);
             break;
         case PlayerMsg_Type_DownloadMPD:
+        case PlayerMsg_Type_RefreshMPD:
             m_msgPool->SetFile(static_cast<unsigned char*>(contents), size);
             break;
         default:
@@ -280,6 +281,8 @@ CURLcode fileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> m
 
     /* specify URL to get */
     curl_easy_setopt(m_curl_handle, CURLOPT_URL, msg->GetURL().c_str());
+
+    LOGMSG_INFO("Going to Download: %s", msg->GetURL().c_str());
 
     /* send all data to this function  */
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, WriteFunction);
