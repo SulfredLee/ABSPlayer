@@ -39,6 +39,32 @@ void mplayerManager::InitComponent()
     startThread();
 }
 
+void mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+{
+    LOGMSG_INFO("Sender: %s", msg->GetSender().c_str());
+
+    if (msg->GetSender() == "segmentSelector")
+    {
+        msg->SetSender("mplayerManager");
+        m_eventTimer.AddEvent(msg, msg->GetMinimumUpdatePeriod());
+    }
+    else if (msg->GetSender() == "fileDownloader")
+    {
+        if (msg->IsMPDFileEmpty())
+        {
+            if (msg->GetURL().length())
+            {
+                msg->SetSender("mplayerManager");
+                m_eventTimer.AddEvent(msg, 500);
+            }
+        }
+        else
+        {
+            if(m_segmentSelector) m_segmentSelector->UpdateCMD(msg);
+        }
+    }
+}
+
 void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
@@ -58,6 +84,11 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
         case PlayerMsg_Type_ProcessNextSegment:
             {
                 ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(msg));
+                break;
+            }
+        case PlayerMsg_Type_RefreshMPD:
+            {
+                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(msg));
                 break;
             }
         default:
@@ -109,8 +140,8 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
         {
             std::shared_ptr<PlayerMsg_Open> msgOpen = std::make_shared<PlayerMsg_Open>();
             msgOpen->SetURL(ABSUrl);
-            UpdateCMD(std::static_pointer_cast<PlayerMsg_Base>(msgOpen));
-            UpdateCMD(msg);
+            ProcessMsg(msgOpen);
+            ProcessMsg(msg);
         }
     }
     else if (stage == PlayerStage_Open)
@@ -124,6 +155,11 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> ms
 {
     if (m_segmentSelector)
         m_segmentSelector->UpdateCMD(msg);
+}
+
+void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+{
+    m_mpdDownloader.UpdateCMD(msg);
 }
 
 // override
@@ -223,14 +259,7 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
             }
         case PlayerMsg_Type_RefreshMPD:
             {
-                if (msg->GetSender() == "segmentSelector")
-                {
-                    m_mpdDownloader.UpdateCMD(msg);
-                }
-                else if (msg->GetSender() == "fileDownloader")
-                {
-                    if(m_segmentSelector) m_segmentSelector->UpdateCMD(msg);
-                }
+                UpdateCMD(std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(msg));
                 break;
             }
         case PlayerMsg_Type_Open:

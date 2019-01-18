@@ -37,3 +37,13 @@ bool PlayerMsg_RefreshMPD::IsMPDFileEmpty()
 {
     return m_mpdFile == nullptr ? true : false;
 }
+
+void PlayerMsg_RefreshMPD::SetMinimumUpdatePeriod(uint64_t minimumUpdatePeriod)
+{
+    m_minimumUpdatePeriod = minimumUpdatePeriod;
+}
+
+uint64_t PlayerMsg_RefreshMPD::GetMinimumUpdatePeriod()
+{
+    return m_minimumUpdatePeriod;
+}

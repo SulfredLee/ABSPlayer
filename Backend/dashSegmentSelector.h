@@ -133,6 +133,7 @@ class dashSegmentSelector : public segmentSelector
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
     void ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to);
+    void HandleDynamicMPDRefresh();
  private:
     DefaultMutex m_mutex;
     std::shared_ptr<dash::mpd::IMPD> m_mpdFile;

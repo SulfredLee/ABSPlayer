@@ -25,18 +25,7 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
     m_mpdFileURL = msg->GetURL();
 
     if (!IsStaticMedia(m_mpdFile))
-    {
-        if (m_mpdFile->GetMinimumUpdatePeriod().find("Y") == std::string::npos)
-        {
-            uint64_t minimumUpdatePeriod;
-            GetTimeString2MSec(m_mpdFile->GetMinimumUpdatePeriod(), minimumUpdatePeriod);
-            segmentSelector::m_eventTimer.AddEvent(PlayerMsg_Type_RefreshMPD, minimumUpdatePeriod, true);
-        }
-        else
-        {
-            LOGMSG_INFO("Not a reasonable Minimum update period: %s", m_mpdFile->GetMinimumUpdatePeriod().c_str());
-        }
-    }
+        HandleDynamicMPDRefresh();
 
     // handle download process status
     m_videoStatus.m_numberSegment = 0;
@@ -45,15 +34,8 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 
 void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
-    if (msg->IsMPDFileEmpty())
-    {
-        msg->SetURL(m_mpdFileURL);
-        SendToManager(msg);
-    }
-    else
-    {
-        m_mpdFile = msg->GetAndMoveMPDFile();
-    }
+    m_mpdFile = msg->GetAndMoveMPDFile();
+    HandleDynamicMPDRefresh();
 }
 
 void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
@@ -1047,4 +1029,24 @@ void dashSegmentSelector::HandleBaseURL(std::stringstream& ss, const downloadInf
 bool dashSegmentSelector::IsStaticMedia(std::shared_ptr<dash::mpd::IMPD> mpdFile)
 {
     return mpdFile->GetType() == "static" ? true : false;
+}
+
+void dashSegmentSelector::HandleDynamicMPDRefresh()
+{
+    if (m_mpdFile->GetMinimumUpdatePeriod().find("Y") == std::string::npos)
+    {
+        uint64_t minimumUpdatePeriod;
+        GetTimeString2MSec(m_mpdFile->GetMinimumUpdatePeriod(), minimumUpdatePeriod);
+
+        LOGMSG_INFO("minimumUpdatePeriod: %lu", minimumUpdatePeriod);
+
+        std::shared_ptr<PlayerMsg_RefreshMPD> msgRefresh = std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(m_msgFactory.CreateMsg(PlayerMsg_Type_RefreshMPD));
+        msgRefresh->SetURL(m_mpdFileURL);
+        msgRefresh->SetMinimumUpdatePeriod(minimumUpdatePeriod);
+        SendToManager(msgRefresh);
+    }
+    else
+    {
+        LOGMSG_INFO("Not a reasonable Minimum update period: %s", m_mpdFile->GetMinimumUpdatePeriod().c_str());
+    }
 }
