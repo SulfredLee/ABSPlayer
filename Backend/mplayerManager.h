@@ -31,6 +31,13 @@ class mplayerManager : public linuxThread, public cmdReceiver
     void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg);
+
+    bool SendToDirtyWriter(std::shared_ptr<PlayerMsg_Base> msg);
+    bool SendToSegmentSelector(std::shared_ptr<PlayerMsg_Base> msg);
+    bool SendToMPDDownloader(std::shared_ptr<PlayerMsg_Base> msg);
+    bool SendToVideoDownloader(std::shared_ptr<PlayerMsg_Base> msg);
+    bool SendToAudioDownloader(std::shared_ptr<PlayerMsg_Base> msg);
+    bool SendToSubtitleDownloader(std::shared_ptr<PlayerMsg_Base> msg);
     // override
     void* Main();
  private:

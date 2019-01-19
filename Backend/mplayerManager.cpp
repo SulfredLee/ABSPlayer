@@ -60,7 +60,7 @@ void mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
         }
         else
         {
-            if(m_segmentSelector) m_segmentSelector->UpdateCMD(msg);
+            SendToSegmentSelector(msg);
         }
     }
 }
@@ -114,7 +114,7 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg)
     std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::make_shared<PlayerMsg_DownloadMPD>();
     msgMPD->SetURL(msg->GetURL());
     std::shared_ptr<PlayerMsg_Base> msgTemp = std::static_pointer_cast<PlayerMsg_Base>(msgMPD);
-    m_mpdDownloader.UpdateCMD(msgTemp);
+    SendToMPDDownloader(msgTemp);
 }
 
 void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
@@ -129,7 +129,7 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
         m_playerStatus.ProcessStatusCMD(StatusCMD_Set_Stage, static_cast<void*>(&stage));
 
         // signal segmentSelector
-        if (m_segmentSelector) m_segmentSelector->UpdateCMD(msg);
+        SendToSegmentSelector(msg);
     }
     else if (stage == PlayerStage_Stop)
     {
@@ -153,13 +153,51 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
 
 void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
 {
-    if (m_segmentSelector)
-        m_segmentSelector->UpdateCMD(msg);
+    SendToSegmentSelector(msg);
 }
 
 void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
-    m_mpdDownloader.UpdateCMD(msg);
+    SendToMPDDownloader(msg);
+}
+
+bool mplayerManager::SendToDirtyWriter(std::shared_ptr<PlayerMsg_Base> msg)
+{
+    msg->SetSender("mplayerManager");
+    return m_dirtyWriter.UpdateCMD(msg);
+}
+
+bool mplayerManager::SendToSegmentSelector(std::shared_ptr<PlayerMsg_Base> msg)
+{
+    msg->SetSender("mplayerManager");
+    if (m_segmentSelector)
+        return m_segmentSelector->UpdateCMD(msg);
+    else
+        return false;
+}
+
+bool mplayerManager::SendToMPDDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+{
+    msg->SetSender("mplayerManager");
+    return m_mpdDownloader.UpdateCMD(msg);
+}
+
+bool mplayerManager::SendToVideoDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+{
+    msg->SetSender("mplayerManager");
+    return m_videoDownloader.UpdateCMD(msg);
+}
+
+bool mplayerManager::SendToAudioDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+{
+    msg->SetSender("mplayerManager");
+    return m_audioDownloader.UpdateCMD(msg);
+}
+
+bool mplayerManager::SendToSubtitleDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+{
+    msg->SetSender("mplayerManager");
+    return m_subtitleDownloader.UpdateCMD(msg);
 }
 
 // override
@@ -190,7 +228,7 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                     PlayerStage stage = PlayerStage_Open_Finish;
                     m_playerStatus.ProcessStatusCMD(StatusCMD_Set_Stage, static_cast<void*>(&stage));
 
-                    if (m_segmentSelector) m_segmentSelector->UpdateCMD(msg);
+                    SendToSegmentSelector(msg);
                 }
                 break;
             }
@@ -206,11 +244,11 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
             {
                 if (msg->GetSender() == "segmentSelector")
                 {
-                    m_videoDownloader.UpdateCMD(msg);
+                    SendToVideoDownloader(msg);
                 }
                 else if (msg->GetSender() == "fileDownloader")
                 {
-                    if (!m_dirtyWriter.UpdateCMD(msg))
+                    if (!SendToDirtyWriter(msg))
                     {
                         m_eventTimer.AddEvent(msg, 100); // try to process this message later
                     }
@@ -221,11 +259,11 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
             {
                 if (msg->GetSender() == "segmentSelector")
                 {
-                    m_audioDownloader.UpdateCMD(msg);
+                    SendToAudioDownloader(msg);
                 }
                 else if (msg->GetSender() == "fileDownloader")
                 {
-                    if (!m_dirtyWriter.UpdateCMD(msg))
+                    if (!SendToDirtyWriter(msg))
                     {
                         m_eventTimer.AddEvent(msg, 100); // try to process this message later
                     }
@@ -234,21 +272,21 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
             }
         case PlayerMsg_Type_DownloadFinish:
             {
-                if (!m_dirtyWriter.UpdateCMD(msg))
+                if (!SendToDirtyWriter(msg))
                 {
                     m_eventTimer.AddEvent(msg, 100); // try to process this message later
                     break;
                 }
                 if (m_segmentSelector)
                 {
-                    m_segmentSelector->UpdateCMD(msg);
+                    SendToSegmentSelector(msg);
                     // check response code
                     std::shared_ptr<PlayerMsg_DownloadFinish> msgFinish = std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg);
                     // process next segment
                     std::shared_ptr<PlayerMsg_ProcessNextSegment> msgNext = std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
                     msgNext->SetSegmentType(msgFinish->GetFileType());
                     if (msgFinish->GetResponseCode() == 200)
-                        m_segmentSelector->UpdateCMD(msgNext);
+                        SendToSegmentSelector(msgNext);
                     else
                     {
                         LOGMSG_INFO("Process %s later", msg->GetMsgTypeName().c_str());
