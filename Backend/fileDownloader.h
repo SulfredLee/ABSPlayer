@@ -44,6 +44,5 @@ class fileDownloader : public linuxThread, public cmdReceiver
     std::shared_ptr<PlayerMsg_DownloadFile> m_msgPool;
     size_t m_msgPoolSize;
     size_t m_msgPoolCount;
-    std::string m_thisName;
 };
 #endif

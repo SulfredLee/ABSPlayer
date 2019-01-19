@@ -24,14 +24,14 @@ fileDownloader::~fileDownloader()
     /* we're done with libcurl, so clean it up */
     curl_global_cleanup();
 
-    LOGMSG_INFO("[%s] OUT", m_thisName.c_str());
+    LOGMSG_INFO("OUT");
 }
 
 void fileDownloader::InitComponent(cmdReceiver* manager, const std::string& thisName)
 {
     m_msgQ.InitComponent(1024 * 1024 * 10); // 10 MByte buffer for message queue
     m_manager = manager;
-    m_thisName = thisName;
+    LOGMSG_CLASS_NAME(thisName);
     startThread();
 }
 
@@ -83,7 +83,7 @@ void fileDownloader::SendPartOfMsg(std::shared_ptr<PlayerMsg_DownloadFile> msgFi
 
 void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_DEBUG("[%s] Process message %s from: %s", m_thisName.c_str(), msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     switch(msg->GetMsgType())
     {
@@ -112,7 +112,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
     /* check for errors */
     if(res != CURLE_OK)
     {
-        LOGMSG_ERROR("[%s] curl_easy_perform() failed: %s", m_thisName.c_str(), curl_easy_strerror(res));
+        LOGMSG_ERROR("curl_easy_perform() failed: %s", curl_easy_strerror(res));
     }
     else
     {
@@ -123,7 +123,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
          * Do something nice with it!
          */
 
-        LOGMSG_INFO("[%s] %lu bytes retrieved, time spent: %f responseCode: %u", m_thisName.c_str(), msg->GetFileLength() ? msg->GetFileLength() : m_msgPoolSize, countTimer.GetSecondDouble(), responseCode);
+        LOGMSG_INFO("%lu bytes retrieved, time spent: %f responseCode: %u", msg->GetFileLength() ? msg->GetFileLength() : m_msgPoolSize, countTimer.GetSecondDouble(), responseCode);
 
         msg->SetResponseCode(responseCode);
 
@@ -140,7 +140,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
     /* check for errors */
     if(res != CURLE_OK)
     {
-        LOGMSG_ERROR("[%s] curl_easy_perform() failed: %s", m_thisName.c_str(), curl_easy_strerror(res));
+        LOGMSG_ERROR("curl_easy_perform() failed: %s", curl_easy_strerror(res));
     }
     else
     {
@@ -151,7 +151,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
          * Do something nice with it!
          */
 
-        LOGMSG_INFO("[%s] %lu bytes retrieved, time spent: %f responseCode: %u", m_thisName.c_str(), msg->GetFileLength(), countTimer.GetSecondDouble(), responseCode);
+        LOGMSG_INFO("%lu bytes retrieved, time spent: %f responseCode: %u", msg->GetFileLength(), countTimer.GetSecondDouble(), responseCode);
 
         msg->SetResponseCode(responseCode);
 
@@ -174,7 +174,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
     /* check for errors */
     if(res != CURLE_OK)
     {
-        LOGMSG_ERROR("[%s] curl_easy_perform() failed: %s", m_thisName.c_str(), curl_easy_strerror(res));
+        LOGMSG_ERROR("curl_easy_perform() failed: %s", curl_easy_strerror(res));
     }
     else
     {
@@ -185,7 +185,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
          * Do something nice with it!
          */
 
-        LOGMSG_INFO("[%s] %lu bytes retrieved, time spent: %f, responseCode: %u", m_thisName.c_str(), msg->GetFileLength(), countTimer.GetSecondDouble(), responseCode);
+        LOGMSG_INFO("%lu bytes retrieved, time spent: %f, responseCode: %u", msg->GetFileLength(), countTimer.GetSecondDouble(), responseCode);
 
         msg->SetResponseCode(responseCode);
 
@@ -228,7 +228,7 @@ void fileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::
 // override
 bool fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_DEBUG("[%s] Received message %s from: %s", m_thisName.c_str(), msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
     bool ret = true;
     switch(msg->GetMsgType())
@@ -242,7 +242,7 @@ bool fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
             {
                 if (!m_msgQ.AddMsg(msg))
                 {
-                    LOGMSG_ERROR("[%s] AddMsg fail", m_thisName.c_str());
+                    LOGMSG_ERROR("AddMsg fail");
                     ret = false;
                 }
             }
@@ -256,7 +256,7 @@ bool fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 // override
 void* fileDownloader::Main()
 {
-    LOGMSG_INFO("[%s] IN", m_thisName.c_str());
+    LOGMSG_INFO("IN");
 
     while(isThreadRunning())
     {
@@ -266,7 +266,7 @@ void* fileDownloader::Main()
         ProcessMsg(msg);
     }
 
-    LOGMSG_INFO("[%s] OUT", m_thisName.c_str());
+    LOGMSG_INFO("OUT");
     return NULL;
 }
 

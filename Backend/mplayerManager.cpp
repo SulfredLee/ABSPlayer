@@ -175,7 +175,7 @@ bool mplayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
                 std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg);
                 if (msgMPD->IsMPDFileEmpty())
                 {
-                    LOGMSG_ERROR("Cannot download abs file");
+                    LOGMSG_ERROR("Cannot download mpd file");
                     // update status
                     PlayerStage stage = PlayerStage_Stop;
                     m_playerStatus.ProcessStatusCMD(StatusCMD_Set_Stage, static_cast<void*>(&stage));

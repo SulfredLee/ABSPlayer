@@ -75,6 +75,24 @@ void Logger::Log(LogLevel logLevel, const char* format, ...)
     }
 }
 
+void Logger::AddClassName(std::string className, void* object)
+{
+    m_classNameMap.insert(std::make_pair(object, className));
+}
+
+std::string Logger::GetClassName(void* object, std::string prettyFunction)
+{
+    std::map<void*, std::string>::iterator it = m_classNameMap.find(object);
+    if (it != m_classNameMap.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        return _GetClassName(prettyFunction);
+    }
+}
+
 std::string Logger::GetCurrentTime()
 {
     timeval curTime;
@@ -105,9 +123,9 @@ std::string Logger::GetLogLevelName(LogLevel logLevel)
         case Logger::LogLevel::DEBUG:
             return "DEBUG";
         case Logger::LogLevel::WARN:
-            return "WARN";
+            return " WARN";
         case Logger::LogLevel::INFO:
-            return "INFO";
+            return " INFO";
         case Logger::LogLevel::ERROR:
             return "ERROR";
         default:
@@ -156,4 +174,15 @@ std::string Logger::GetFileName(const std::string& fullPath)
 {
     size_t found = fullPath.find_last_of("/\\");
     return fullPath.substr(found + 1);
+}
+
+std::string Logger::_GetClassName(const std::string& prettyFunction)
+{
+    size_t colons = prettyFunction.find("::");
+    if (colons == std::string::npos)
+        return "::";
+    size_t begin = prettyFunction.substr(0,colons).rfind(" ") + 1;
+    size_t end = colons - begin;
+
+    return prettyFunction.substr(begin,end);
 }

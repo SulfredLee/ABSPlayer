@@ -101,11 +101,9 @@ void* playerTimer::Main()
             uint64_t currentMSec = GetCurrentMSec();
             if (it->first <= currentMSec)
             {
-                LOGMSG_INFO("sulfred debug IN");
                 // handle timer event
                 if (m_msgQ)
                 {
-                    LOGMSG_INFO("sulfred debug IN");
                     if (it->second.m_msg != nullptr)
                         m_msgQ->AddMsg(it->second.m_msg);
                     else
