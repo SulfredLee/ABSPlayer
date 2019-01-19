@@ -24,13 +24,18 @@ class mplayerManager : public linuxThread, public cmdReceiver
     // override
     bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
  private:
-    void UpdateCMD(std::shared_ptr<PlayerMsg_RefreshMPD> msg);
+    void UpdateCMD(std::shared_ptr<PlayerMsg_GetPlayerStage> msg);
 
     void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadSubtitle> msg);
+    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
 
     bool SendToDirtyWriter(std::shared_ptr<PlayerMsg_Base> msg);
     bool SendToSegmentSelector(std::shared_ptr<PlayerMsg_Base> msg);
