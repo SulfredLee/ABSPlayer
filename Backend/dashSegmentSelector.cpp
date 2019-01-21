@@ -137,8 +137,8 @@ void dashSegmentSelector::HandleVideoSegment()
     // get target criteria
     uint32_t targetDownloadSize = GetTargetDownloadSize_Video();
     // get url information
-    downloadInfo videoDownloadInfo;
-    segmentSelectorRet ret = GetDownloadInfo_Video(targetDownloadSize, videoDownloadInfo);
+    segmentInfo videoSegmentInfo;
+    segmentSelectorRet ret = GetSegmentInfo_Video(targetDownloadSize, videoSegmentInfo);
     if (ret == SegmentSelector_Video_EOS)
     {
         LOGMSG_INFO("Video_EOS");
@@ -151,7 +151,7 @@ void dashSegmentSelector::HandleVideoSegment()
     }
     // generate url
     uint64_t nextDownloadTime;
-    std::string targetURL = GetDownloadURL_Video(videoDownloadInfo, nextDownloadTime);
+    std::string targetURL = GetDownloadURL_Video(videoSegmentInfo, nextDownloadTime);
 
     LOGMSG_INFO("targetURL: %s", targetURL.c_str());
 
@@ -180,8 +180,8 @@ void dashSegmentSelector::HandleAudioSegment()
     // get target criteria
     uint32_t targetDownloadSize = GetTargetDownloadSize_Audio();
     // get url information
-    downloadInfo audioDownloadInfo;
-    segmentSelectorRet ret = GetDownloadInfo_Audio(targetDownloadSize, audioDownloadInfo);
+    segmentInfo audioSegmentInfo;
+    segmentSelectorRet ret = GetSegmentInfo_Audio(targetDownloadSize, audioSegmentInfo);
     if (ret == SegmentSelector_Audio_EOS)
     {
         LOGMSG_INFO("Audio_EOS");
@@ -194,7 +194,7 @@ void dashSegmentSelector::HandleAudioSegment()
     }
     // generate url
     uint64_t nextDownloadTime;
-    std::string targetURL = GetDownloadURL_Audio(audioDownloadInfo, nextDownloadTime);
+    std::string targetURL = GetDownloadURL_Audio(audioSegmentInfo, nextDownloadTime);
 
     LOGMSG_INFO("targetURL: %s", targetURL.c_str());
 
@@ -255,14 +255,14 @@ uint32_t dashSegmentSelector::GetTargetDownloadSize_Video()
     return GetTargetDownloadSize(m_videoStatus, "Video");
 }
 
-segmentSelectorRet dashSegmentSelector::GetDownloadInfo_Video(uint32_t targetDownloadSize, downloadInfo& resultInfo)
+segmentSelectorRet dashSegmentSelector::GetSegmentInfo_Video(uint32_t targetDownloadSize, segmentInfo& resultInfo)
 {
     segmentSelectorRet ret = SegmentSelector_Okay;
 
     uint32_t selectedDownloadSize = 0;
     resultInfo.Representation.bandwidth = 0;
-    downloadInfo lowestQualityInfo; lowestQualityInfo.Representation.bandwidth = 0xFFFFFFFF;
-    downloadInfo highestQualityInfo; highestQualityInfo.Representation.bandwidth = 0;
+    segmentInfo lowestQualityInfo; lowestQualityInfo.Representation.bandwidth = 0xFFFFFFFF;
+    segmentInfo highestQualityInfo; highestQualityInfo.Representation.bandwidth = 0;
     uint64_t accumulatePeriodDuration = 0;
     m_videoStatus.m_mediaEndTime = 0;
     m_videoStatus.m_mediaStartTime = 0;
@@ -315,22 +315,22 @@ segmentSelectorRet dashSegmentSelector::GetDownloadInfo_Video(uint32_t targetDow
                             if (selectedDownloadSize < segmentSize && segmentSize < targetDownloadSize) // if bandwidth is sutiable
                             {
                                 selectedDownloadSize = segmentSize;
-                                resultInfo = GetDownloadInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
+                                resultInfo = GetSegmentInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
                             }
                             if (lowestQualityInfo.Representation.bandwidth > bandwidth)
                             {
-                                lowestQualityInfo = GetDownloadInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
+                                lowestQualityInfo = GetSegmentInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
                             }
                             if (highestQualityInfo.Representation.bandwidth < bandwidth)
                             {
-                                highestQualityInfo = GetDownloadInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
+                                highestQualityInfo = GetSegmentInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
                             }
                         }
                         else
                         {
                             if (highestQualityInfo.Representation.bandwidth < bandwidth)
                             {
-                                highestQualityInfo = GetDownloadInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
+                                highestQualityInfo = GetSegmentInfo_priv_Video(period, adaptationSet, segmentTemplate, representation);
                             }
                         }
                     }
@@ -342,7 +342,10 @@ segmentSelectorRet dashSegmentSelector::GetDownloadInfo_Video(uint32_t targetDow
     // handle media end time (MSec)
     m_videoStatus.m_mediaEndTime = accumulatePeriodDuration;
     if (m_mpdFile->GetMediaPresentationDuration().length())
+    {
+        isHasPeriodDuration = true;
         GetTimeString2MSec(m_mpdFile->GetMediaPresentationDuration(), m_videoStatus.m_mediaEndTime);
+    }
 
     if ((isHasPeriodDuration || m_mpdFile->GetMediaPresentationDuration().length()) && m_videoStatus.m_mediaEndTime <= currentDownloadedTime)
         ret = SegmentSelector_Video_EOS;
@@ -357,28 +360,28 @@ segmentSelectorRet dashSegmentSelector::GetDownloadInfo_Video(uint32_t targetDow
     return ret;
 }
 
-std::string dashSegmentSelector::GetDownloadURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime)
+std::string dashSegmentSelector::GetDownloadURL_Video(const segmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime)
 {
-    if (m_videoStatus.m_downloadInfo.Representation.id != videoDownloadInfo.Representation.id)
+    if (m_videoStatus.m_segmentInfo.Representation.id != videoSegmentInfo.Representation.id)
     {
         m_videoStatus.m_initFileReady = false;
     }
-    m_videoStatus.m_downloadInfo = videoDownloadInfo;
+    m_videoStatus.m_segmentInfo = videoSegmentInfo;
 
     if (m_videoStatus.m_initFileReady)
     {
-        if (!videoDownloadInfo.isHasSegmentTemplate)
+        if (!videoSegmentInfo.isHasSegmentTemplate)
             return "Video_EOS";
-        return GetSegmentURL_Video(videoDownloadInfo, nextDownloadTime);
+        return GetSegmentURL_Video(videoSegmentInfo, nextDownloadTime);
     }
     else
     {
         nextDownloadTime = m_videoStatus.m_downloadTime;
-        return GetInitFileURL_Video(videoDownloadInfo);
+        return GetInitFileURL_Video(videoSegmentInfo);
     }
 }
 
-std::string dashSegmentSelector::GetInitFileURL_Video(const downloadInfo& targetInfo)
+std::string dashSegmentSelector::GetInitFileURL_Video(const segmentInfo& targetInfo)
 {
     std::stringstream ss;
     HandleBaseURL(ss, targetInfo);
@@ -394,19 +397,19 @@ std::string dashSegmentSelector::GetInitFileURL_Video(const downloadInfo& target
     return ss.str();
 }
 
-std::string dashSegmentSelector::GetSegmentURL_Video(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime)
+std::string dashSegmentSelector::GetSegmentURL_Video(const segmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime)
 {
     std::stringstream ss;
-    HandleBaseURL(ss, videoDownloadInfo);
+    HandleBaseURL(ss, videoSegmentInfo);
 
     std::string mediaStr;
-    if (videoDownloadInfo.MPD.type == "static")
+    if (videoSegmentInfo.MPD.type == "static")
     {
-        mediaStr = GetSegmentURL_Video_Static(videoDownloadInfo, nextDownloadTime);
+        mediaStr = GetSegmentURL_Video_Static(videoSegmentInfo, nextDownloadTime);
     }
     else
     {
-        mediaStr = GetSegmentURL_Video_Dynamic(videoDownloadInfo, nextDownloadTime);
+        mediaStr = GetSegmentURL_Video_Dynamic(videoSegmentInfo, nextDownloadTime);
     }
 
     if (mediaStr == "Video_EOS" || mediaStr == "Video_BOS")
@@ -418,38 +421,38 @@ std::string dashSegmentSelector::GetSegmentURL_Video(const downloadInfo& videoDo
     return ss.str();
 }
 
-std::string dashSegmentSelector::GetSegmentURL_Video_Static(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime)
+std::string dashSegmentSelector::GetSegmentURL_Video_Static(const segmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime)
 {
-    if (videoDownloadInfo.isHasSegmentTemplate)
+    if (videoSegmentInfo.isHasSegmentTemplate)
     {
-        std::string mediaStr = videoDownloadInfo.SegmentTemplate.media;
-        ReplaceAllSubstring(mediaStr, "$RepresentationID$", videoDownloadInfo.Representation.id);
+        std::string mediaStr = videoSegmentInfo.SegmentTemplate.media;
+        ReplaceAllSubstring(mediaStr, "$RepresentationID$", videoSegmentInfo.Representation.id);
 
         if (mediaStr.find("$Number") != std::string::npos)
         {
             // get next segment number
-            if (videoDownloadInfo.SegmentTemplate.startNumber > m_videoStatus.m_numberSegment || videoDownloadInfo.Period.id != m_videoStatus.m_prePeriodID)
-                m_videoStatus.m_numberSegment = videoDownloadInfo.SegmentTemplate.startNumber;
+            if (videoSegmentInfo.SegmentTemplate.startNumber > m_videoStatus.m_numberSegment || videoSegmentInfo.Period.id != m_videoStatus.m_prePeriodID)
+                m_videoStatus.m_numberSegment = videoSegmentInfo.SegmentTemplate.startNumber;
             // handle period id
-            m_videoStatus.m_prePeriodID = videoDownloadInfo.Period.id;
+            m_videoStatus.m_prePeriodID = videoSegmentInfo.Period.id;
             uint32_t nextSegment = m_videoStatus.m_numberSegment;
             // get next download time
-            nextDownloadTime = m_videoStatus.m_downloadTime + GetSegmentDurationMSec(videoDownloadInfo);
+            nextDownloadTime = m_videoStatus.m_downloadTime + GetSegmentDurationMSec(videoSegmentInfo);
             // check if EOS or BOS
             if (IsEOS(nextDownloadTime, m_videoStatus))
                 return "Video_EOS";
             if (IsBOS(nextDownloadTime, m_videoStatus))
                 return "Video_BOS";
             HandleStringFormat(mediaStr, nextSegment, "$Number"); // $Number%06$
-            HandleStringFormat(mediaStr, videoDownloadInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
+            HandleStringFormat(mediaStr, videoSegmentInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
         }
         else if (mediaStr.find("$Time") != std::string::npos)
         {
             // get next segment number
             uint32_t nextSegment = m_videoStatus.m_numberSegment;
             // get next download time
-            if (nextSegment < videoDownloadInfo.SegmentTemplate.SegmentTimeline.size())
-                nextDownloadTime = GetSegmentTimeMSec(videoDownloadInfo.SegmentTemplate.SegmentTimeline[nextSegment], videoDownloadInfo);
+            if (nextSegment < videoSegmentInfo.SegmentTemplate.SegmentTimeline.size())
+                nextDownloadTime = GetSegmentTimeMSec(videoSegmentInfo.SegmentTemplate.SegmentTimeline[nextSegment], videoSegmentInfo);
             else
             {
                 LOGMSG_ERROR("Out of range audio");
@@ -461,8 +464,8 @@ std::string dashSegmentSelector::GetSegmentURL_Video_Static(const downloadInfo& 
             if (IsBOS(nextDownloadTime, m_videoStatus))
                 return "Video_BOS";
             // get the string format
-            ReplaceAllSubstring(mediaStr, "$Time$", std::to_string(videoDownloadInfo.SegmentTemplate.SegmentTimeline[nextSegment]));
-            LOGMSG_DEBUG("%s nextDownloadTime: %u", mediaStr.c_str(), videoDownloadInfo.SegmentTemplate.SegmentTimeline[nextSegment]);
+            ReplaceAllSubstring(mediaStr, "$Time$", std::to_string(videoSegmentInfo.SegmentTemplate.SegmentTimeline[nextSegment]));
+            LOGMSG_DEBUG("%s nextDownloadTime: %u", mediaStr.c_str(), videoSegmentInfo.SegmentTemplate.SegmentTimeline[nextSegment]);
         }
         else
         {
@@ -476,12 +479,12 @@ std::string dashSegmentSelector::GetSegmentURL_Video_Static(const downloadInfo& 
     }
 }
 
-std::string dashSegmentSelector::GetSegmentURL_Video_Dynamic(const downloadInfo& videoDownloadInfo, uint64_t& nextDownloadTime)
+std::string dashSegmentSelector::GetSegmentURL_Video_Dynamic(const segmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime)
 {
-    if (videoDownloadInfo.isHasSegmentTemplate)
+    if (videoSegmentInfo.isHasSegmentTemplate)
     {
-        std::string mediaStr = videoDownloadInfo.SegmentTemplate.media;
-        ReplaceAllSubstring(mediaStr, "$RepresentationID$", videoDownloadInfo.Representation.id);
+        std::string mediaStr = videoSegmentInfo.SegmentTemplate.media;
+        ReplaceAllSubstring(mediaStr, "$RepresentationID$", videoSegmentInfo.Representation.id);
 
         if (mediaStr.find("$Number") != std::string::npos)
         {
@@ -489,13 +492,13 @@ std::string dashSegmentSelector::GetSegmentURL_Video_Dynamic(const downloadInfo&
             std::time_t now = std::time(0); // get current time Sec counted from 1970 01 01 00:00
             uint32_t nextSegment;
             if (m_videoStatus.m_numberSegment == 0)
-                m_videoStatus.m_numberSegment = (now - 5) / videoDownloadInfo.SegmentTemplate.duration;
+                m_videoStatus.m_numberSegment = (now - 5) / videoSegmentInfo.SegmentTemplate.duration;
             nextSegment = m_videoStatus.m_numberSegment;
             // get next download time
             nextDownloadTime = now;
 
             HandleStringFormat(mediaStr, nextSegment, "$Number"); // $Number%06$
-            HandleStringFormat(mediaStr, videoDownloadInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
+            HandleStringFormat(mediaStr, videoSegmentInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
         }
         return mediaStr;
     }
@@ -505,12 +508,12 @@ std::string dashSegmentSelector::GetSegmentURL_Video_Dynamic(const downloadInfo&
     }
 }
 
-uint32_t dashSegmentSelector::GetSegmentDurationMSec(const downloadInfo& inDownloadInfo)
+uint32_t dashSegmentSelector::GetSegmentDurationMSec(const segmentInfo& inDownloadInfo)
 {
     return GetSegmentTimeMSec(inDownloadInfo.SegmentTemplate.duration, inDownloadInfo);
 }
 
-uint32_t dashSegmentSelector::GetSegmentTimeMSec(const uint64_t& inTime, const downloadInfo& inDownloadInfo)
+uint32_t dashSegmentSelector::GetSegmentTimeMSec(const uint64_t& inTime, const segmentInfo& inDownloadInfo)
 {
     if (inDownloadInfo.SegmentTemplate.timescale > 0)
         return (static_cast<double>(inTime) / inDownloadInfo.SegmentTemplate.timescale) * 1000;
@@ -523,14 +526,14 @@ uint32_t dashSegmentSelector::GetTargetDownloadSize_Audio()
     return GetTargetDownloadSize(m_audioStatus, "Audio");
 }
 
-segmentSelectorRet dashSegmentSelector::GetDownloadInfo_Audio(uint32_t targetDownloadSize, downloadInfo& resultInfo)
+segmentSelectorRet dashSegmentSelector::GetSegmentInfo_Audio(uint32_t targetDownloadSize, segmentInfo& resultInfo)
 {
     segmentSelectorRet ret = SegmentSelector_Okay;
 
     uint32_t selectedDownloadSize = 0;
     resultInfo.Representation.bandwidth = 0;
-    downloadInfo lowestQualityInfo; lowestQualityInfo.Representation.bandwidth = 0xFFFFFFFF;
-    downloadInfo highestQualityInfo; highestQualityInfo.Representation.bandwidth = 0;
+    segmentInfo lowestQualityInfo; lowestQualityInfo.Representation.bandwidth = 0xFFFFFFFF;
+    segmentInfo highestQualityInfo; highestQualityInfo.Representation.bandwidth = 0;
     uint64_t accumulatePeriodDuration = 0;
     m_audioStatus.m_mediaEndTime = 0;
     m_audioStatus.m_mediaStartTime = 0;
@@ -588,22 +591,22 @@ segmentSelectorRet dashSegmentSelector::GetDownloadInfo_Audio(uint32_t targetDow
                                 if (selectedDownloadSize < segmentSize && segmentSize < targetDownloadSize) // if bandwidth is sutiable
                                 {
                                     selectedDownloadSize = segmentSize;
-                                    resultInfo = GetDownloadInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
+                                    resultInfo = GetSegmentInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
                                 }
                                 if (lowestQualityInfo.Representation.bandwidth > bandwidth)
                                 {
-                                    lowestQualityInfo = GetDownloadInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
+                                    lowestQualityInfo = GetSegmentInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
                                 }
                                 if (highestQualityInfo.Representation.bandwidth < bandwidth)
                                 {
-                                    highestQualityInfo = GetDownloadInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
+                                    highestQualityInfo = GetSegmentInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
                                 }
                             }
                             else
                             {
                                 if (highestQualityInfo.Representation.bandwidth < bandwidth)
                                 {
-                                    highestQualityInfo = GetDownloadInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
+                                    highestQualityInfo = GetSegmentInfo_priv_Audio(period, adaptationSet, segmentTemplate, representation);
                                 }
                             }
                         }
@@ -616,7 +619,10 @@ segmentSelectorRet dashSegmentSelector::GetDownloadInfo_Audio(uint32_t targetDow
     // handle media end time (MSec)
     m_audioStatus.m_mediaEndTime = accumulatePeriodDuration;
     if (m_mpdFile->GetMediaPresentationDuration().length())
+    {
+        isHasPeriodDuration = true;
         GetTimeString2MSec(m_mpdFile->GetMediaPresentationDuration(), m_audioStatus.m_mediaEndTime);
+    }
 
     if ((isHasPeriodDuration || m_mpdFile->GetMediaPresentationDuration().length()) && m_audioStatus.m_mediaEndTime <= currentDownloadedTime)
         ret = SegmentSelector_Audio_EOS;
@@ -631,28 +637,28 @@ segmentSelectorRet dashSegmentSelector::GetDownloadInfo_Audio(uint32_t targetDow
     return ret;
 }
 
-std::string dashSegmentSelector::GetDownloadURL_Audio(const downloadInfo& audioDownloadInfo, uint64_t& nextDownloadTime)
+std::string dashSegmentSelector::GetDownloadURL_Audio(const segmentInfo& audioSegmentInfo, uint64_t& nextDownloadTime)
 {
-    if (m_audioStatus.m_downloadInfo.Representation.id != audioDownloadInfo.Representation.id)
+    if (m_audioStatus.m_segmentInfo.Representation.id != audioSegmentInfo.Representation.id)
     {
         m_audioStatus.m_initFileReady = false;
     }
-    m_audioStatus.m_downloadInfo = audioDownloadInfo;
+    m_audioStatus.m_segmentInfo = audioSegmentInfo;
 
     if (m_audioStatus.m_initFileReady)
     {
-        if (!audioDownloadInfo.isHasSegmentTemplate)
+        if (!audioSegmentInfo.isHasSegmentTemplate)
             return "Audio_EOS";
-        return GetSegmentURL_Audio(audioDownloadInfo, nextDownloadTime);
+        return GetSegmentURL_Audio(audioSegmentInfo, nextDownloadTime);
     }
     else
     {
         nextDownloadTime = m_audioStatus.m_downloadTime;
-        return GetInitFileURL_Audio(audioDownloadInfo);
+        return GetInitFileURL_Audio(audioSegmentInfo);
     }
 }
 
-std::string dashSegmentSelector::GetInitFileURL_Audio(const downloadInfo& targetInfo)
+std::string dashSegmentSelector::GetInitFileURL_Audio(const segmentInfo& targetInfo)
 {
     std::stringstream ss;
     HandleBaseURL(ss, targetInfo);
@@ -668,7 +674,7 @@ std::string dashSegmentSelector::GetInitFileURL_Audio(const downloadInfo& target
     return ss.str();
 }
 
-std::string dashSegmentSelector::GetSegmentURL_Audio(const downloadInfo& targetInfo, uint64_t& nextDownloadTime)
+std::string dashSegmentSelector::GetSegmentURL_Audio(const segmentInfo& targetInfo, uint64_t& nextDownloadTime)
 {
     std::stringstream ss;
     HandleBaseURL(ss, targetInfo);
@@ -692,7 +698,7 @@ std::string dashSegmentSelector::GetSegmentURL_Audio(const downloadInfo& targetI
     return ss.str();
 }
 
-std::string dashSegmentSelector::GetSegmentURL_Audio_Static(const downloadInfo& targetInfo, uint64_t& nextDownloadTime)
+std::string dashSegmentSelector::GetSegmentURL_Audio_Static(const segmentInfo& targetInfo, uint64_t& nextDownloadTime)
 {
     if (targetInfo.isHasSegmentTemplate)
     {
@@ -750,7 +756,7 @@ std::string dashSegmentSelector::GetSegmentURL_Audio_Static(const downloadInfo& 
     }
 }
 
-std::string dashSegmentSelector::GetSegmentURL_Audio_Dynamic(const downloadInfo& targetInfo, uint64_t& nextDownloadTime)
+std::string dashSegmentSelector::GetSegmentURL_Audio_Dynamic(const segmentInfo& targetInfo, uint64_t& nextDownloadTime)
 {
     if (targetInfo.isHasSegmentTemplate)
     {
@@ -795,9 +801,9 @@ uint32_t dashSegmentSelector::GetTargetDownloadSize(const dashMediaStatus& media
     return availableDownloadSize;
 }
 
-downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Audio(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
+segmentInfo dashSegmentSelector::GetSegmentInfo_priv_Audio(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
 {
-    downloadInfo resultInfo;
+    segmentInfo resultInfo;
 
     dash::mpd::IBaseUrl* BaseURL = m_mpdFile->GetMPDPathBaseUrl();
     resultInfo.BaseURL = BaseURL->GetUrl() + "/";
@@ -835,9 +841,9 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Audio(dash::mpd::IPeriod*
     return resultInfo;
 }
 
-downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Video(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
+segmentInfo dashSegmentSelector::GetSegmentInfo_priv_Video(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
 {
-    downloadInfo resultInfo;
+    segmentInfo resultInfo;
 
     // handle MPD attributes
     resultInfo.MPD.minimumUpdatePeriod = m_mpdFile->GetMinimumUpdatePeriod();
@@ -883,7 +889,7 @@ downloadInfo dashSegmentSelector::GetDownloadInfo_priv_Video(dash::mpd::IPeriod*
 bool dashSegmentSelector::IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus)
 {
     LOGMSG_DEBUG("nextDownloadTime: %lu endTime: %lu", nextDownloadTime, inMediaStatus.m_mediaEndTime);
-    if (inMediaStatus.m_downloadInfo.Period.duration.length())
+    if (inMediaStatus.m_segmentInfo.Period.duration.length())
         return nextDownloadTime > inMediaStatus.m_mediaEndTime;
     else
         return false;
@@ -891,7 +897,7 @@ bool dashSegmentSelector::IsEOS(const uint64_t& nextDownloadTime, const dashMedi
 
 bool dashSegmentSelector::IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus)
 {
-    if (inMediaStatus.m_downloadInfo.Period.start.length())
+    if (inMediaStatus.m_segmentInfo.Period.start.length())
         return nextDownloadTime < inMediaStatus.m_mediaStartTime;
     else
         return false;
@@ -911,7 +917,6 @@ bool dashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& time
     else
         return false;
 
-    timeMSec = 0;
     size_t posHour = timeStr.find("H");
     if (posHour != std::string::npos)
     {
@@ -1000,7 +1005,7 @@ void dashSegmentSelector::HandleStringFormat(std::string& mediaStr, uint32_t dat
     }
 }
 
-void dashSegmentSelector::HandleBaseURL(std::stringstream& ss, const downloadInfo& targetInfo)
+void dashSegmentSelector::HandleBaseURL(std::stringstream& ss, const segmentInfo& targetInfo)
 {
     if (targetInfo.Representation.BaseURL.find("http") != std::string::npos)
     {
