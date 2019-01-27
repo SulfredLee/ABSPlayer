@@ -13,6 +13,8 @@
 enum segmentSelectorRet
 {
     SegmentSelector_Okay,
+    SegmentSelector_EOS,
+    SegmentSelector_BOS,
     SegmentSelector_Video_EOS,
     SegmentSelector_Video_BOS,
     SegmentSelector_Audio_EOS,
