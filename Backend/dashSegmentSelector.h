@@ -74,6 +74,14 @@ struct dashMediaStatus
     segmentInfo m_segmentInfo;
 };
 
+struct segmentCriteria
+{
+    std::string mediaType;
+    std::string language;
+    uint64_t downloadTime;
+    uint32_t downloadSize;
+};
+
 class dashSegmentSelector : public segmentSelector
 {
  public:
@@ -109,7 +117,11 @@ class dashSegmentSelector : public segmentSelector
     void HandleStringFormat(std::string& mediaStr, uint32_t data, std::string target);
     void HandleBaseURL(std::stringstream& ss, const segmentInfo& targetInfo);
     bool IsStaticMedia(std::shared_ptr<dash::mpd::IMPD> mpdFile);
-    segmentSelectorRet GetSegmentInfo(uint32_t targetDownloadSize, std::string mediaType, std::string language, dashMediaStatus& mediaStatus, segmentInfo& resultInfo);
+    void GetSegmentInfo_Base(segmentCriteria criteria, segmentInfo& resultInfo);
+    void GetSegmentInfo_Period(segmentCriteria criteria, dash::mpd::IPeriod* period, segmentInfo& resultInfo);
+    void GetSegmentInfo_AdaptationSet(segmentCriteria criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, segmentInfo& resultInfo);
+    void GetSegmentInfo_Representation(segmentCriteria criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, segmentInfo& resultInfo);
+    void GetMediaDuration(uint64_t& startTime, uint64_t& endTime);
     segmentInfo GetSegmentInfo_priv(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
     std::string GetDownloadURL(dashMediaStatus& mediaStatus, const segmentInfo& videoDownloadInfo, uint64_t& nextDownloadTime, std::string mediaType);
     std::string GetSegmentURL(dashMediaStatus& mediaStatus, const segmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime, std::string mediaType);

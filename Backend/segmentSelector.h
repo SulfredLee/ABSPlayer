@@ -10,19 +10,6 @@
 
 #include <memory>
 
-enum segmentSelectorRet
-{
-    SegmentSelector_Okay,
-    SegmentSelector_EOS,
-    SegmentSelector_BOS,
-    SegmentSelector_Video_EOS,
-    SegmentSelector_Video_BOS,
-    SegmentSelector_Audio_EOS,
-    SegmentSelector_Audio_BOS,
-    SegmentSelector_Fail,
-    SegmentSelector_END
-};
-
 class segmentSelector : public linuxThread, public cmdReceiver
 {
  public:
