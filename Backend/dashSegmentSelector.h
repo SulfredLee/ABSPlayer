@@ -50,7 +50,7 @@ struct MPD_MPD
     std::string type; // static or dynamic
 };
 
-struct segmentInfo
+struct SegmentInfo
 {
     std::string BaseURL;
     MPD_MPD MPD;
@@ -70,11 +70,10 @@ struct dashMediaStatus
     uint32_t m_numberSegment;
     uint64_t m_mediaStartTime;
     uint64_t m_mediaEndTime;
-    std::string m_prePeriodID;
-    segmentInfo m_segmentInfo;
+    SegmentInfo m_segmentInfo;
 };
 
-struct segmentCriteria
+struct SegmentCriteria
 {
     std::string mediaType;
     std::string language;
@@ -111,23 +110,24 @@ class dashSegmentSelector : public segmentSelector
     bool IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
-    uint32_t GetSegmentDurationMSec(const segmentInfo& inDownloadInfo);
-    uint32_t GetSegmentTimeMSec(const uint64_t& inTime, const segmentInfo& inDownloadInfo);
+    uint32_t GetSegmentDurationMSec(const SegmentInfo& inDownloadInfo);
+    uint32_t GetSegmentTimeMSec(const uint64_t& inTime, const SegmentInfo& inDownloadInfo);
+    void GetSegmentNumberFromTimeline(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo);
     void AppendSlash2Path(std::string& inPath);
     void HandleStringFormat(std::string& mediaStr, uint32_t data, std::string target);
-    void HandleBaseURL(std::stringstream& ss, const segmentInfo& targetInfo);
+    void HandleBaseURL(std::stringstream& ss, const SegmentInfo& targetInfo);
     bool IsStaticMedia(std::shared_ptr<dash::mpd::IMPD> mpdFile);
-    void GetSegmentInfo_Base(segmentCriteria criteria, segmentInfo& resultInfo);
-    void GetSegmentInfo_Period(segmentCriteria criteria, dash::mpd::IPeriod* period, segmentInfo& resultInfo);
-    void GetSegmentInfo_AdaptationSet(segmentCriteria criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, segmentInfo& resultInfo);
-    void GetSegmentInfo_Representation(segmentCriteria criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, segmentInfo& resultInfo);
+    void GetSegmentInfo_Base(const SegmentCriteria& criteria, SegmentInfo& resultInfo);
+    void GetSegmentInfo_Period(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, SegmentInfo& resultInfo);
+    void GetSegmentInfo_AdaptationSet(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo);
+    void GetSegmentInfo_Representation(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo);
     void GetMediaDuration(uint64_t& startTime, uint64_t& endTime);
-    segmentInfo GetSegmentInfo_priv(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
-    std::string GetDownloadURL(dashMediaStatus& mediaStatus, const segmentInfo& videoDownloadInfo, uint64_t& nextDownloadTime, std::string mediaType);
-    std::string GetSegmentURL(dashMediaStatus& mediaStatus, const segmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime, std::string mediaType);
-    std::string GetSegmentURL_Static(dashMediaStatus& mediaStatus, const segmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime);
-    std::string GetInitFileURL(const segmentInfo& targetInfo);
-    std::string GetSegmentURL_Dynamic(dashMediaStatus& mediaStatus, const segmentInfo& targetInfo, uint64_t& nextDownloadTime);
+    SegmentInfo GetSegmentInfo_priv(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation);
+    std::string GetDownloadURL(dashMediaStatus& mediaStatus, const SegmentInfo& videoDownloadInfo, uint64_t& nextDownloadTime, std::string mediaType);
+    std::string GetSegmentURL(dashMediaStatus& mediaStatus, const SegmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime, std::string mediaType);
+    std::string GetSegmentURL_Static(dashMediaStatus& mediaStatus, const SegmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime);
+    std::string GetInitFileURL(const SegmentInfo& targetInfo);
+    std::string GetSegmentURL_Dynamic(dashMediaStatus& mediaStatus, const SegmentInfo& targetInfo, uint64_t& nextDownloadTime);
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);

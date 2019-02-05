@@ -219,7 +219,11 @@ void mplayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
 {
     if (msg->GetSender() == "segmentSelector")
     {
-        SendToVideoDownloader(msg);
+        if (m_videoSegmentURL != msg->GetURL())
+        {
+            SendToVideoDownloader(msg);
+            m_videoSegmentURL = msg->GetURL();
+        }
     }
     else if (msg->GetSender() == "fileDownloader")
     {
