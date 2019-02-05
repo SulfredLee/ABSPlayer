@@ -4,11 +4,11 @@
 
 #include <memory>
 
-class cmdReceiver
+class CmdReceiver
 {
  public:
-    cmdReceiver();
-    virtual ~cmdReceiver();
+    CmdReceiver();
+    virtual ~CmdReceiver();
 
     virtual bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg) = 0;
 };

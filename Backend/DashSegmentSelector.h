@@ -1,6 +1,6 @@
 #ifndef DASH_SEGMENTSELECTOR_H
 #define DASH_SEGMENTSELECTOR_H
-#include "segmentSelector.h"
+#include "SegmentSelector.h"
 #include "DefaultMutex.h"
 #include "PlayerMsg_Factory.h"
 
@@ -81,14 +81,14 @@ struct SegmentCriteria
     uint32_t downloadSize;
 };
 
-class dashSegmentSelector : public segmentSelector
+class DashSegmentSelector : public SegmentSelector
 {
  public:
-    dashSegmentSelector();
-    ~dashSegmentSelector();
+    DashSegmentSelector();
+    ~DashSegmentSelector();
 
     // override
-    void InitComponent(cmdReceiver* manager);
+    void InitComponent(CmdReceiver* manager);
  private:
     void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
     void ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg);

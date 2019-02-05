@@ -1,15 +1,15 @@
-#include "playerTimer.h"
+#include "PlayerTimer.h"
 #include "Logger.h"
 #include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
 
-playerTimer::playerTimer()
+PlayerTimer::PlayerTimer()
 {
     m_msgQ = nullptr;
 }
 
-playerTimer::~playerTimer()
+PlayerTimer::~PlayerTimer()
 {
     stopThread();
     DefaultLock lock(&m_mutex);
@@ -18,36 +18,36 @@ playerTimer::~playerTimer()
     LOGMSG_INFO("OUT");
 }
 
-void playerTimer::InitComponent(playerMsgQ* msgQ)
+void PlayerTimer::InitComponent(PlayerMsgQ* msgQ)
 {
     m_msgQ = msgQ;
     startThread();
 }
 
-void playerTimer::DeinitComponent()
+void PlayerTimer::DeinitComponent()
 {
     DefaultLock lock(&m_mutex);
     m_msgQ = nullptr;
 }
 
-void playerTimer::AddEvent(PlayerMsg_Type msgType, uint64_t timeMSec, bool repeat)
+void PlayerTimer::AddEvent(PlayerMsg_Type msgType, uint64_t timeMSec, bool repeat)
 {
     uint64_t targetTime = GetCurrentMSec() + timeMSec;
-    playerTimerEvent tempEvent = {msgType, nullptr, targetTime, timeMSec, repeat};
+    PlayerTimerEvent tempEvent = {msgType, nullptr, targetTime, timeMSec, repeat};
     AddEvent_priv(targetTime, tempEvent);
 }
 
-void playerTimer::AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec)
+void PlayerTimer::AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec)
 {
     uint64_t targetTime = GetCurrentMSec() + timeMSec;
-    playerTimerEvent tempEvent = {msg->GetMsgType(), msg, targetTime, timeMSec, false};
+    PlayerTimerEvent tempEvent = {msg->GetMsgType(), msg, targetTime, timeMSec, false};
     AddEvent_priv(targetTime, tempEvent);
 }
 
-void playerTimer::RemoveEvent(PlayerMsg_Type msgType)
+void PlayerTimer::RemoveEvent(PlayerMsg_Type msgType)
 {
     DefaultLock lock(&m_mutex);
-    for (std::map<uint64_t, playerTimerEvent>::iterator it = m_eventQ.begin(); it != m_eventQ.end(); it++)
+    for (std::map<uint64_t, PlayerTimerEvent>::iterator it = m_eventQ.begin(); it != m_eventQ.end(); it++)
     {
         if (IsNonRepeatType(it->second.m_msgType) && it->second.m_msgType == msgType)
         {
@@ -57,7 +57,7 @@ void playerTimer::RemoveEvent(PlayerMsg_Type msgType)
     }
 }
 
-uint64_t playerTimer::GetCurrentMSec()
+uint64_t PlayerTimer::GetCurrentMSec()
 {
     struct timeval  tv;
     gettimeofday(&tv, NULL);
@@ -66,7 +66,7 @@ uint64_t playerTimer::GetCurrentMSec()
     return timeMSec;
 }
 
-bool playerTimer::IsNonRepeatType(PlayerMsg_Type msgType)
+bool PlayerTimer::IsNonRepeatType(PlayerMsg_Type msgType)
 {
     switch (msgType)
     {
@@ -79,7 +79,7 @@ bool playerTimer::IsNonRepeatType(PlayerMsg_Type msgType)
     }
 }
 
-void playerTimer::AddEvent_priv(const uint64_t& targetTime, const playerTimerEvent& tempEvent)
+void PlayerTimer::AddEvent_priv(const uint64_t& targetTime, const PlayerTimerEvent& tempEvent)
 {
     // prevent repeated event
     RemoveEvent(tempEvent.m_msgType);
@@ -88,7 +88,7 @@ void playerTimer::AddEvent_priv(const uint64_t& targetTime, const playerTimerEve
 }
 
 // override
-void* playerTimer::Main()
+void* PlayerTimer::Main()
 {
     LOGMSG_INFO("IN");
 
@@ -113,7 +113,7 @@ void* playerTimer::Main()
                 if (it->second.m_repeat)
                 {
                     uint64_t nextTargetTime = currentMSec + it->second.m_duration;
-                    playerTimerEvent tempEvent = {it->second.m_msgType, nullptr, nextTargetTime, it->second.m_duration, it->second.m_repeat};
+                    PlayerTimerEvent tempEvent = {it->second.m_msgType, nullptr, nextTargetTime, it->second.m_duration, it->second.m_repeat};
                     m_eventQ.insert(std::make_pair(nextTargetTime, tempEvent));
                 }
                 // remove and reset iterator

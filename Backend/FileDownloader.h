@@ -1,8 +1,8 @@
 #ifndef FILE_DOWNLOADER_H
 #define FILE_DOWNLOADER_H
-#include "linuxThread.h"
-#include "cmdReceiver.h"
-#include "playerMsgQ.h"
+#include "LinuxThread.h"
+#include "CmdReceiver.h"
+#include "PlayerMsgQ.h"
 #include "PlayerMsg_Common.h"
 #include "PlayerMsg_Factory.h"
 #include "CountTimer.h"
@@ -11,13 +11,13 @@
 #include <curl/curl.h>
 #include <memory>
 
-class fileDownloader : public linuxThread, public cmdReceiver
+class FileDownloader : public LinuxThread, public CmdReceiver
 {
  public:
-    fileDownloader();
-    ~fileDownloader();
+    FileDownloader();
+    ~FileDownloader();
 
-    void InitComponent(cmdReceiver* manager, const std::string& thisName);
+    void InitComponent(CmdReceiver* manager, const std::string& thisName);
     void DeinitComponent();
     // override
     bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
@@ -36,8 +36,8 @@ class fileDownloader : public linuxThread, public cmdReceiver
     // override
     void* Main();
  private:
-    playerMsgQ m_msgQ;
-    cmdReceiver* m_manager;
+    PlayerMsgQ m_msgQ;
+    CmdReceiver* m_manager;
     PlayerMsg_Factory m_msgFactory;
     CURL *m_curl_handle;
     // Handle sending small part of message

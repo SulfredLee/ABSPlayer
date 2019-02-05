@@ -1,24 +1,24 @@
 #ifndef MPLAYER_MANAGER_H
 #define MPLAYER_MANAGER_H
-#include "linuxThread.h"
-#include "cmdReceiver.h"
-#include "playerMsgQ.h"
-#include "fileDownloader.h"
+#include "LinuxThread.h"
+#include "CmdReceiver.h"
+#include "PlayerMsgQ.h"
+#include "FileDownloader.h"
 #include "PlayerMsg_Common.h"
-#include "playerStatus.h"
-#include "segmentSelector.h"
-#include "dashSegmentSelector.h"
-#include "playerTimer.h"
-#include "dirtyWriter.h"
+#include "PlayerStatus.h"
+#include "SegmentSelector.h"
+#include "DashSegmentSelector.h"
+#include "PlayerTimer.h"
+#include "DirtyWriter.h"
 #include "PlayerMsg_Factory.h"
 
 #include <memory>
 
-class mplayerManager : public linuxThread, public cmdReceiver
+class MPlayerManager : public LinuxThread, public CmdReceiver
 {
  public:
-    mplayerManager();
-    ~mplayerManager();
+    MPlayerManager();
+    ~MPlayerManager();
 
     void InitComponent();
     // override
@@ -47,15 +47,15 @@ class mplayerManager : public linuxThread, public cmdReceiver
     void* Main();
  private:
     PlayerMsg_Factory m_msgFactory;
-    playerMsgQ m_msgQ;
-    dirtyWriter m_dirtyWriter;
-    playerTimer m_eventTimer;
-    fileDownloader m_mpdDownloader;
-    fileDownloader m_videoDownloader;
-    fileDownloader m_audioDownloader;
-    fileDownloader m_subtitleDownloader;
-    playerStatus m_playerStatus;
-    std::shared_ptr<segmentSelector> m_segmentSelector;
+    PlayerMsgQ m_msgQ;
+    DirtyWriter m_dirtyWriter;
+    PlayerTimer m_eventTimer;
+    FileDownloader m_mpdDownloader;
+    FileDownloader m_videoDownloader;
+    FileDownloader m_audioDownloader;
+    FileDownloader m_subtitleDownloader;
+    PlayerStatus m_playerStatus;
+    std::shared_ptr<SegmentSelector> m_segmentSelector;
 
     std::string m_videoSegmentURL;
     std::string m_audioSegmentURL;

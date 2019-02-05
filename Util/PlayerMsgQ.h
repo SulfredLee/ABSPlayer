@@ -6,11 +6,11 @@
 #include <queue>
 #include <memory>
 
-class playerMsgQ
+class PlayerMsgQ
 {
  public:
-    playerMsgQ();
-    ~playerMsgQ();
+    PlayerMsgQ();
+    ~PlayerMsgQ();
 
     void InitComponent(size_t totalMsgSizeLimit);
     bool AddMsg(std::shared_ptr<PlayerMsg_Base> msg);

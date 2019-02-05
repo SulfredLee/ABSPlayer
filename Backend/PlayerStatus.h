@@ -23,11 +23,11 @@ enum PlayerStage
     PlayerStage_End
 };
 
-class playerStatus
+class PlayerStatus
 {
  public:
-    playerStatus();
-    ~playerStatus();
+    PlayerStatus();
+    ~PlayerStatus();
 
     void InitComponent();
     void ProcessStatusCMD(StatusCMD cmd, void* data);

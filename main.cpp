@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "mplayerManager.h"
+#include "MPlayerManager.h"
 #include "PlayerMsg_Common.h"
 #include "Logger.h"
 
@@ -9,9 +9,9 @@
 
 int main(int argc, char* argv[])
 {
-    mplayerManager manager;
+    MPlayerManager manager;
     manager.InitComponent();
-    cmdReceiver* cmdHandler = static_cast<cmdReceiver*>(&manager);
+    CmdReceiver* cmdHandler = static_cast<CmdReceiver*>(&manager);
     bool running = true;
     while(running)
     {

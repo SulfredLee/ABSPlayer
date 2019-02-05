@@ -1,9 +1,9 @@
-#include "dashSegmentSelector.h"
+#include "DashSegmentSelector.h"
 #include "Logger.h"
 #include <algorithm>
 #include <ctime>
 
-dashSegmentSelector::dashSegmentSelector()
+DashSegmentSelector::DashSegmentSelector()
 {
     m_mpdFile = nullptr;
     InitStatus(m_videoStatus);
@@ -11,15 +11,15 @@ dashSegmentSelector::dashSegmentSelector()
     InitStatus(m_subtitleStatus);
 }
 
-dashSegmentSelector::~dashSegmentSelector()
+DashSegmentSelector::~DashSegmentSelector()
 {}
 
-void dashSegmentSelector::InitComponent(cmdReceiver* manager)
+void DashSegmentSelector::InitComponent(CmdReceiver* manager)
 {
-    segmentSelector::InitComponent(manager);
+    SegmentSelector::InitComponent(manager);
 }
 
-void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 {
     m_mpdFile = msg->GetAndMoveMPDFile();
     m_mpdFileURL = msg->GetURL();
@@ -32,13 +32,13 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
     m_audioStatus.m_numberSegment = 0;
 }
 
-void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
     m_mpdFile = msg->GetAndMoveMPDFile();
     HandleDynamicMPDRefresh();
 }
 
-void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
+void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
 {
     // get current player status
     std::shared_ptr<PlayerMsg_Base> msgBase = m_msgFactory.CreateMsg(PlayerMsg_Type_GetPlayerStage);
@@ -56,15 +56,15 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
     }
 }
 
-void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg)
+void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg)
 {
 }
 
-void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg)
+void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg)
 {
 }
 
-void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
+void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
 {
     switch(msg->GetFileType())
     {
@@ -98,7 +98,7 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> m
     }
 }
 
-void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
+void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
 {
     switch(msg->GetSegmentType())
     {
@@ -118,7 +118,7 @@ void dashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegmen
     }
 }
 
-void dashSegmentSelector::InitStatus(dashMediaStatus& status)
+void DashSegmentSelector::InitStatus(dashMediaStatus& status)
 {
     status.m_initFileReady = false;
     status.m_downloadSpeed = 0;
@@ -129,7 +129,7 @@ void dashSegmentSelector::InitStatus(dashMediaStatus& status)
     status.m_mediaEndTime = 0;
 }
 
-void dashSegmentSelector::HandleVideoSegment()
+void DashSegmentSelector::HandleVideoSegment()
 {
     // duration checking
     GetMediaDuration(m_videoStatus.m_mediaStartTime, m_videoStatus.m_mediaEndTime);
@@ -178,7 +178,7 @@ void dashSegmentSelector::HandleVideoSegment()
     }
 }
 
-void dashSegmentSelector::HandleAudioSegment()
+void DashSegmentSelector::HandleAudioSegment()
 {
     // duration checking
     GetMediaDuration(m_audioStatus.m_mediaStartTime, m_audioStatus.m_mediaEndTime);
@@ -227,7 +227,7 @@ void dashSegmentSelector::HandleAudioSegment()
     }
 }
 
-void dashSegmentSelector::HandleSubtitleSegment()
+void DashSegmentSelector::HandleSubtitleSegment()
 {
     if (m_subtitleStatus.m_initFileReady)
     {
@@ -238,7 +238,7 @@ void dashSegmentSelector::HandleSubtitleSegment()
     }
 }
 
-bool dashSegmentSelector::ReplaceSubstring(std::string& str, const std::string& from, const std::string& to)
+bool DashSegmentSelector::ReplaceSubstring(std::string& str, const std::string& from, const std::string& to)
 {
     size_t start_pos = str.find(from);
     if(start_pos == std::string::npos)
@@ -247,7 +247,7 @@ bool dashSegmentSelector::ReplaceSubstring(std::string& str, const std::string& 
     return true;
 }
 
-void dashSegmentSelector::ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to)
+void DashSegmentSelector::ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to)
 {
     if(from.empty())
         return;
@@ -259,12 +259,12 @@ void dashSegmentSelector::ReplaceAllSubstring(std::string& str, const std::strin
     }
 }
 
-uint32_t dashSegmentSelector::GetSegmentDurationMSec(const SegmentInfo& inDownloadInfo)
+uint32_t DashSegmentSelector::GetSegmentDurationMSec(const SegmentInfo& inDownloadInfo)
 {
     return GetSegmentTimeMSec(inDownloadInfo.SegmentTemplate.duration, inDownloadInfo);
 }
 
-uint32_t dashSegmentSelector::GetSegmentTimeMSec(const uint64_t& inTime, const SegmentInfo& inDownloadInfo)
+uint32_t DashSegmentSelector::GetSegmentTimeMSec(const uint64_t& inTime, const SegmentInfo& inDownloadInfo)
 {
     if (inDownloadInfo.SegmentTemplate.timescale > 0)
         return (static_cast<double>(inTime) / inDownloadInfo.SegmentTemplate.timescale) * 1000;
@@ -272,7 +272,7 @@ uint32_t dashSegmentSelector::GetSegmentTimeMSec(const uint64_t& inTime, const S
         return inTime * 1000;
 }
 
-uint32_t dashSegmentSelector::GetTargetDownloadSize(const dashMediaStatus& mediaStatus, std::string mediaType)
+uint32_t DashSegmentSelector::GetTargetDownloadSize(const dashMediaStatus& mediaStatus, std::string mediaType)
 {
     uint32_t downloadSpeed = mediaStatus.m_downloadSpeed;
     uint64_t downloadTime = mediaStatus.m_downloadTime;
@@ -288,7 +288,7 @@ uint32_t dashSegmentSelector::GetTargetDownloadSize(const dashMediaStatus& media
     return availableDownloadSize;
 }
 
-bool dashSegmentSelector::IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus)
+bool DashSegmentSelector::IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus)
 {
     LOGMSG_DEBUG("nextDownloadTime: %lu endTime: %lu", nextDownloadTime, inMediaStatus.m_mediaEndTime);
     if (inMediaStatus.m_segmentInfo.Period.duration.length())
@@ -297,7 +297,7 @@ bool dashSegmentSelector::IsEOS(const uint64_t& nextDownloadTime, const dashMedi
         return false;
 }
 
-bool dashSegmentSelector::IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus)
+bool DashSegmentSelector::IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus)
 {
     if (inMediaStatus.m_segmentInfo.Period.start.length())
         return nextDownloadTime < inMediaStatus.m_mediaStartTime;
@@ -305,7 +305,7 @@ bool dashSegmentSelector::IsBOS(const uint64_t& nextDownloadTime, const dashMedi
         return false;
 }
 
-bool dashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec)
+bool DashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec)
 {
     timeMSec = 0;
     if (timeStr.size() < 2)
@@ -346,7 +346,7 @@ bool dashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& time
     return true;
 }
 
-std::vector<uint32_t> dashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate)
+std::vector<uint32_t> DashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate)
 {
     std::vector<uint32_t> result;
     dash::mpd::ISegmentTimeline const * SegmentTimeline = segmentTemplate->GetSegmentTimeline();
@@ -379,13 +379,13 @@ std::vector<uint32_t> dashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmen
     return result;
 }
 
-void dashSegmentSelector::AppendSlash2Path(std::string& inPath)
+void DashSegmentSelector::AppendSlash2Path(std::string& inPath)
 {
     if (inPath.size() && inPath.back() != '/')
         inPath.push_back('/');
 }
 
-void dashSegmentSelector::HandleStringFormat(std::string& mediaStr, uint32_t data, std::string target)
+void DashSegmentSelector::HandleStringFormat(std::string& mediaStr, uint32_t data, std::string target)
 {
     if (mediaStr.find(target) != std::string::npos)
     {
@@ -407,7 +407,7 @@ void dashSegmentSelector::HandleStringFormat(std::string& mediaStr, uint32_t dat
     }
 }
 
-void dashSegmentSelector::HandleBaseURL(std::stringstream& ss, const SegmentInfo& targetInfo)
+void DashSegmentSelector::HandleBaseURL(std::stringstream& ss, const SegmentInfo& targetInfo)
 {
     if (targetInfo.Representation.BaseURL.find("http") != std::string::npos)
     {
@@ -433,12 +433,12 @@ void dashSegmentSelector::HandleBaseURL(std::stringstream& ss, const SegmentInfo
     }
 }
 
-bool dashSegmentSelector::IsStaticMedia(std::shared_ptr<dash::mpd::IMPD> mpdFile)
+bool DashSegmentSelector::IsStaticMedia(std::shared_ptr<dash::mpd::IMPD> mpdFile)
 {
     return mpdFile->GetType() == "static" ? true : false;
 }
 
-void dashSegmentSelector::HandleDynamicMPDRefresh()
+void DashSegmentSelector::HandleDynamicMPDRefresh()
 {
     if (m_mpdFile->GetMinimumUpdatePeriod().find("Y") == std::string::npos)
     {
@@ -458,7 +458,7 @@ void dashSegmentSelector::HandleDynamicMPDRefresh()
     }
 }
 
-void dashSegmentSelector::GetSegmentInfo_Base(const SegmentCriteria& criteria, SegmentInfo& resultInfo)
+void DashSegmentSelector::GetSegmentInfo_Base(const SegmentCriteria& criteria, SegmentInfo& resultInfo)
 {
     resultInfo.Representation.bandwidth = 0;
     uint64_t accumulatePeriodDuration = 0;
@@ -489,7 +489,7 @@ void dashSegmentSelector::GetSegmentInfo_Base(const SegmentCriteria& criteria, S
     LOGMSG_INFO("selected bandwidth: %u representation id: %s", resultInfo.Representation.bandwidth, resultInfo.Representation.id.c_str());
 }
 
-void dashSegmentSelector::GetSegmentInfo_Period(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, SegmentInfo& resultInfo)
+void DashSegmentSelector::GetSegmentInfo_Period(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, SegmentInfo& resultInfo)
 {
     LOGMSG_DEBUG("IN");
     std::vector<dash::mpd::IAdaptationSet *> adaptationsSets = period->GetAdaptationSets();
@@ -501,7 +501,7 @@ void dashSegmentSelector::GetSegmentInfo_Period(const SegmentCriteria& criteria,
     LOGMSG_DEBUG("OUT");
 }
 
-void dashSegmentSelector::GetSegmentInfo_AdaptationSet(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo)
+void DashSegmentSelector::GetSegmentInfo_AdaptationSet(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo)
 {
     LOGMSG_DEBUG("IN");
     std::string mimeType = adaptationSet->GetMimeType();
@@ -517,7 +517,7 @@ void dashSegmentSelector::GetSegmentInfo_AdaptationSet(const SegmentCriteria& cr
     LOGMSG_DEBUG("OUT");
 }
 
-void dashSegmentSelector::GetSegmentInfo_Representation(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo)
+void DashSegmentSelector::GetSegmentInfo_Representation(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo)
 {
     LOGMSG_DEBUG("IN");
     uint32_t selectedDownloadSize = 0;
@@ -566,7 +566,7 @@ void dashSegmentSelector::GetSegmentInfo_Representation(const SegmentCriteria& c
     LOGMSG_DEBUG("OUT");
 }
 
-void dashSegmentSelector::GetMediaDuration(uint64_t& startTime, uint64_t& endTime)
+void DashSegmentSelector::GetMediaDuration(uint64_t& startTime, uint64_t& endTime)
 {
     startTime = 0xFFFFFFFFFFFFFFFF;
     endTime = 0;
@@ -592,7 +592,7 @@ void dashSegmentSelector::GetMediaDuration(uint64_t& startTime, uint64_t& endTim
     }
 }
 
-SegmentInfo dashSegmentSelector::GetSegmentInfo_priv(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
+SegmentInfo DashSegmentSelector::GetSegmentInfo_priv(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
 {
     SegmentInfo resultInfo;
 
@@ -637,7 +637,7 @@ SegmentInfo dashSegmentSelector::GetSegmentInfo_priv(dash::mpd::IPeriod* period,
     return resultInfo;
 }
 
-std::string dashSegmentSelector::GetDownloadURL(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo, uint64_t& nextDownloadTime, std::string mediaType)
+std::string DashSegmentSelector::GetDownloadURL(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo, uint64_t& nextDownloadTime, std::string mediaType)
 {
     if (mediaStatus.m_segmentInfo.Representation.id != segmentInfo.Representation.id)
     {
@@ -657,7 +657,7 @@ std::string dashSegmentSelector::GetDownloadURL(dashMediaStatus& mediaStatus, co
     }
 }
 
-std::string dashSegmentSelector::GetSegmentURL(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo, uint64_t& nextDownloadTime, std::string mediaType)
+std::string DashSegmentSelector::GetSegmentURL(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo, uint64_t& nextDownloadTime, std::string mediaType)
 {
     std::stringstream ss;
     HandleBaseURL(ss, segmentInfo);
@@ -681,7 +681,7 @@ std::string dashSegmentSelector::GetSegmentURL(dashMediaStatus& mediaStatus, con
     return ss.str();
 }
 
-std::string dashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo, uint64_t& nextDownloadTime)
+std::string DashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo, uint64_t& nextDownloadTime)
 {
     if (segmentInfo.isHasSegmentTemplate)
     {
@@ -722,7 +722,7 @@ std::string dashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStat
     }
 }
 
-std::string dashSegmentSelector::GetInitFileURL(const SegmentInfo& targetInfo)
+std::string DashSegmentSelector::GetInitFileURL(const SegmentInfo& targetInfo)
 {
     std::stringstream ss;
     HandleBaseURL(ss, targetInfo);
@@ -738,7 +738,7 @@ std::string dashSegmentSelector::GetInitFileURL(const SegmentInfo& targetInfo)
     return ss.str();
 }
 
-std::string dashSegmentSelector::GetSegmentURL_Dynamic(dashMediaStatus& mediaStatus, const SegmentInfo& targetInfo, uint64_t& nextDownloadTime)
+std::string DashSegmentSelector::GetSegmentURL_Dynamic(dashMediaStatus& mediaStatus, const SegmentInfo& targetInfo, uint64_t& nextDownloadTime)
 {
     if (targetInfo.isHasSegmentTemplate)
     {
@@ -767,7 +767,7 @@ std::string dashSegmentSelector::GetSegmentURL_Dynamic(dashMediaStatus& mediaSta
     }
 }
 
-void dashSegmentSelector::GetSegmentNumberFromTimeline(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo)
+void DashSegmentSelector::GetSegmentNumberFromTimeline(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo)
 {
     // reset segment number
     if (segmentInfo.Period.id != mediaStatus.m_segmentInfo.Period.id)

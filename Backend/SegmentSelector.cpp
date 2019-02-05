@@ -1,11 +1,11 @@
-#include "segmentSelector.h"
+#include "SegmentSelector.h"
 #include "Logger.h"
 
-segmentSelector::segmentSelector()
+SegmentSelector::SegmentSelector()
 {
 }
 
-segmentSelector::~segmentSelector()
+SegmentSelector::~SegmentSelector()
 {
     m_eventTimer.DeinitComponent();
     stopThread();
@@ -13,7 +13,7 @@ segmentSelector::~segmentSelector()
     m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
 }
 
-void segmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
+void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -59,17 +59,17 @@ void segmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     }
 }
 
-void segmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 {
     LOGMSG_INFO("Dummy Process message %s", msg->GetMsgTypeName().c_str());
 }
 
-void segmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
     LOGMSG_INFO("Dummy Process message %s", msg->GetMsgTypeName().c_str());
 }
 
-void segmentSelector::InitComponent(cmdReceiver* manager)
+void SegmentSelector::InitComponent(CmdReceiver* manager)
 {
     LOGMSG_INFO("IN");
     m_manager = manager;
@@ -78,14 +78,14 @@ void segmentSelector::InitComponent(cmdReceiver* manager)
     startThread();
 }
 
-void segmentSelector::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
+void SegmentSelector::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    msg->SetSender("segmentSelector");
+    msg->SetSender("SegmentSelector");
     if (m_manager) m_manager->UpdateCMD(msg);
 }
 
 // override
-bool segmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool SegmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -114,7 +114,7 @@ bool segmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 }
 
 // override
-void* segmentSelector::Main()
+void* SegmentSelector::Main()
 {
     LOGMSG_INFO("IN");
 

@@ -1,20 +1,20 @@
-#include "playerStatus.h"
+#include "PlayerStatus.h"
 #include "PlayerMsg_Common.h"
 #include "Logger.h"
 
-playerStatus::playerStatus()
+PlayerStatus::PlayerStatus()
 {}
 
-playerStatus::~playerStatus()
+PlayerStatus::~PlayerStatus()
 {}
 
-void playerStatus::InitComponent()
+void PlayerStatus::InitComponent()
 {
     m_stage = PlayerStage_Stop;
     m_ABSUrl.clear();
 }
 
-void playerStatus::ProcessStatusCMD(StatusCMD cmd, void* data)
+void PlayerStatus::ProcessStatusCMD(StatusCMD cmd, void* data)
 {
     DefaultLock lock(&m_mutex);
     switch(cmd)

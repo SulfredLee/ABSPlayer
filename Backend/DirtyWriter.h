@@ -1,19 +1,19 @@
 #ifndef DIRTYWRITER_H
 #define DIRTYWRITER_H
-#include "linuxThread.h"
-#include "cmdReceiver.h"
-#include "playerMsgQ.h"
+#include "LinuxThread.h"
+#include "CmdReceiver.h"
+#include "PlayerMsgQ.h"
 #include "PlayerMsg_Factory.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
-class dirtyWriter : public linuxThread, public cmdReceiver
+class DirtyWriter : public LinuxThread, public CmdReceiver
 {
  public:
-    dirtyWriter();
-    ~dirtyWriter();
+    DirtyWriter();
+    ~DirtyWriter();
 
     void InitComponent();
     // override
@@ -34,7 +34,7 @@ class dirtyWriter : public linuxThread, public cmdReceiver
     bool makePath(const std::string& path);
     void SaveFile(std::string fileName, const std::vector<unsigned char>& file, bool isAppend);
  private:
-    playerMsgQ m_msgQ;
+    PlayerMsgQ m_msgQ;
     PlayerMsg_Factory m_msgFactory;
 };
 

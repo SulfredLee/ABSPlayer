@@ -1,9 +1,9 @@
-#include "fileDownloader.h"
+#include "FileDownloader.h"
 #include "Logger.h"
 #include "IMPD.h"
 #include "libdash.h"
 
-fileDownloader::fileDownloader()
+FileDownloader::FileDownloader()
 {
     m_manager = NULL;
 
@@ -12,7 +12,7 @@ fileDownloader::fileDownloader()
     m_curl_handle = curl_easy_init();
 }
 
-fileDownloader::~fileDownloader()
+FileDownloader::~FileDownloader()
 {
     stopThread();
     std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
@@ -27,7 +27,7 @@ fileDownloader::~fileDownloader()
     LOGMSG_INFO("OUT");
 }
 
-void fileDownloader::InitComponent(cmdReceiver* manager, const std::string& thisName)
+void FileDownloader::InitComponent(CmdReceiver* manager, const std::string& thisName)
 {
     m_msgQ.InitComponent(1024 * 1024 * 10); // 10 MByte buffer for message queue
     m_manager = manager;
@@ -35,22 +35,22 @@ void fileDownloader::InitComponent(cmdReceiver* manager, const std::string& this
     startThread();
 }
 
-void fileDownloader::DeinitComponent()
+void FileDownloader::DeinitComponent()
 {
     m_manager = NULL;
 }
 
-size_t fileDownloader::WriteFunction(void *contents, size_t size, size_t nmemb, void *userp)
+size_t FileDownloader::WriteFunction(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
-    fileDownloader* downloader = static_cast<fileDownloader*>(userp);
+    FileDownloader* downloader = static_cast<FileDownloader*>(userp);
 
     downloader->SaveToPool(contents, realsize);
 
     return realsize;
 }
 
-void fileDownloader::SaveToPool(void *contents, size_t size)
+void FileDownloader::SaveToPool(void *contents, size_t size)
 {
     switch (m_msgPool->GetMsgType())
     {
@@ -72,7 +72,7 @@ void fileDownloader::SaveToPool(void *contents, size_t size)
     }
 }
 
-void fileDownloader::SendPartOfMsg(std::shared_ptr<PlayerMsg_DownloadFile> msgFile, void *contents, size_t size)
+void FileDownloader::SendPartOfMsg(std::shared_ptr<PlayerMsg_DownloadFile> msgFile, void *contents, size_t size)
 {
     msgFile->SetURL(m_msgPool->GetURL());
     msgFile->SetFile(static_cast<unsigned char*>(contents), size);
@@ -81,7 +81,7 @@ void fileDownloader::SendPartOfMsg(std::shared_ptr<PlayerMsg_DownloadFile> msgFi
     SendToManager(msgFile);
 }
 
-void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
+void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -104,7 +104,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     }
 }
 
-void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
+void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
 {
     CountTimer countTimer;
     int32_t responseCode;
@@ -132,7 +132,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
     }
 }
 
-void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 {
     CountTimer countTimer;
     int32_t responseCode;
@@ -166,7 +166,7 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
     }
 }
 
-void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
     CountTimer countTimer;
     int32_t responseCode;
@@ -200,13 +200,13 @@ void fileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
     }
 }
 
-void fileDownloader::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
+void FileDownloader::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    msg->SetSender("fileDownloader");
+    msg->SetSender("FileDownloader");
     if (m_manager) m_manager->UpdateCMD(msg);
 }
 
-void fileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::shared_ptr<PlayerMsg_DownloadFile> msg)
+void FileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::shared_ptr<PlayerMsg_DownloadFile> msg)
 {
     uint32_t downloadSpeed;
     if (msg->GetFileLength())
@@ -226,7 +226,7 @@ void fileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::
 }
 
 // override
-bool fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool FileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -254,7 +254,7 @@ bool fileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 }
 
 // override
-void* fileDownloader::Main()
+void* FileDownloader::Main()
 {
     LOGMSG_INFO("IN");
 
@@ -270,7 +270,7 @@ void* fileDownloader::Main()
     return NULL;
 }
 
-CURLcode fileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> msg, CountTimer& countTimer, int32_t& responseCode)
+CURLcode FileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> msg, CountTimer& countTimer, int32_t& responseCode)
 {
     // handle message pool so that we can download and process part of the message
     m_msgPool = msg;

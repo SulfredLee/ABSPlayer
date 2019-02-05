@@ -1,21 +1,21 @@
-#include "linuxThread.h"
+#include "LinuxThread.h"
 #include "Logger.h"
 
-linuxThread::linuxThread()
+LinuxThread::LinuxThread()
 {
     m_run = false;
     m_thread = 0;
 }
 
-linuxThread::~linuxThread()
+LinuxThread::~LinuxThread()
 {
     stopThread();
     if (m_thread) pthread_join(m_thread, NULL);
 }
 
-bool linuxThread::startThread()
+bool LinuxThread::startThread()
 {
-    int ret = pthread_create(&m_thread, NULL, linuxThread::MainProxy, (void*)this);
+    int ret = pthread_create(&m_thread, NULL, LinuxThread::MainProxy, (void*)this);
     if (ret)
     {
         LOGMSG_ERROR("pthread_create fail, code: %d", ret);
@@ -25,23 +25,23 @@ bool linuxThread::startThread()
     return true;
 }
 
-bool linuxThread::isThreadRunning()
+bool LinuxThread::isThreadRunning()
 {
     return m_run;
 }
 
-void linuxThread::stopThread()
+void LinuxThread::stopThread()
 {
     m_run = false;
 }
 
-void linuxThread::joinThread()
+void LinuxThread::joinThread()
 {
     if (m_thread) pthread_join(m_thread, NULL);
     m_thread = 0;
 }
 
-void* linuxThread::MainProxy(void* context)
+void* LinuxThread::MainProxy(void* context)
 {
-    return ((linuxThread* )context)->Main();
+    return ((LinuxThread* )context)->Main();
 }

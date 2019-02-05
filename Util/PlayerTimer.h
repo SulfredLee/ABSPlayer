@@ -1,7 +1,7 @@
 #ifndef PLAYERTIMER_H
 #define PLAYERTIMER_H
-#include "linuxThread.h"
-#include "playerMsgQ.h"
+#include "LinuxThread.h"
+#include "PlayerMsgQ.h"
 #include "PlayerMsg_Base.h"
 #include "PlayerMsg_Common.h"
 #include "PlayerMsg_Factory.h"
@@ -10,7 +10,7 @@
 #include <map>
 #include <memory>
 
-struct playerTimerEvent
+struct PlayerTimerEvent
 {
     PlayerMsg_Type m_msgType;
     std::shared_ptr<PlayerMsg_Base> m_msg;
@@ -19,13 +19,13 @@ struct playerTimerEvent
     bool m_repeat;
 };
 
-class playerTimer : public linuxThread
+class PlayerTimer : public LinuxThread
 {
  public:
-    playerTimer();
-    ~playerTimer();
+    PlayerTimer();
+    ~PlayerTimer();
 
-    void InitComponent(playerMsgQ* msgQ);
+    void InitComponent(PlayerMsgQ* msgQ);
     void DeinitComponent();
     void AddEvent(PlayerMsg_Type msgType, uint64_t timeMSec, bool repeat);
     void AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec);
@@ -33,12 +33,12 @@ class playerTimer : public linuxThread
  private:
     uint64_t GetCurrentMSec();
     bool IsNonRepeatType(PlayerMsg_Type msgType);
-    void AddEvent_priv(const uint64_t& targetTime, const playerTimerEvent& tempEvent);
+    void AddEvent_priv(const uint64_t& targetTime, const PlayerTimerEvent& tempEvent);
     // override
     void* Main();
  private:
-    playerMsgQ* m_msgQ;
-    std::map<uint64_t, playerTimerEvent> m_eventQ; // key: next event time, value: event content
+    PlayerMsgQ* m_msgQ;
+    std::map<uint64_t, PlayerTimerEvent> m_eventQ; // key: next event time, value: event content
     PlayerMsg_Factory m_msgFactory;
     DefaultMutex m_mutex;
 };

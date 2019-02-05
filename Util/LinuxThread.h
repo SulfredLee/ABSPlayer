@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-class linuxThread
+class LinuxThread
 {
  public:
-    linuxThread();
-    virtual ~linuxThread();
+    LinuxThread();
+    virtual ~LinuxThread();
  protected:
     virtual void* Main() = 0;
 

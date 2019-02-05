@@ -1,4 +1,4 @@
-#include "dirtyWriter.h"
+#include "DirtyWriter.h"
 #include "Logger.h"
 
 #include <sys/types.h>
@@ -6,10 +6,10 @@
 
 #include <fstream>
 
-dirtyWriter::dirtyWriter()
+DirtyWriter::DirtyWriter()
 {}
 
-dirtyWriter::~dirtyWriter()
+DirtyWriter::~DirtyWriter()
 {
     stopThread();
     m_msgQ.AddMsg(m_msgFactory.CreateMsg(PlayerMsg_Type_Dummy));
@@ -17,13 +17,13 @@ dirtyWriter::~dirtyWriter()
     LOGMSG_INFO("OUT");
 }
 
-void dirtyWriter::InitComponent()
+void DirtyWriter::InitComponent()
 {
     m_msgQ.InitComponent(50 * 1024 * 1024); // 50 MByte
     startThread();
 }
 
-void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
+void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -44,7 +44,7 @@ void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     }
 }
 
-void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
+void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
 {
     std::string fileURL = msg->GetURL();
     ReplaceSubstring(fileURL, "http://", "./");
@@ -61,7 +61,7 @@ void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
     }
 }
 
-void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
+void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
 {
     std::string fileURL = msg->GetURL();
     ReplaceSubstring(fileURL, "http://", "./");
@@ -78,7 +78,7 @@ void dirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
     }
 }
 
-bool dirtyWriter::isDirExist(const std::string& path)
+bool DirtyWriter::isDirExist(const std::string& path)
 {
     struct stat info;
     if (stat(path.c_str(), &info) != 0)
@@ -88,7 +88,7 @@ bool dirtyWriter::isDirExist(const std::string& path)
     return (info.st_mode & S_IFDIR) != 0;
 }
 
-bool dirtyWriter::makePath(const std::string& path)
+bool DirtyWriter::makePath(const std::string& path)
 {
     mode_t mode = 0755;
     int ret = mkdir(path.c_str(), mode);
@@ -119,7 +119,7 @@ bool dirtyWriter::makePath(const std::string& path)
     }
 }
 
-void dirtyWriter::SaveFile(std::string fileName, const std::vector<unsigned char>& file, bool isAppend)
+void DirtyWriter::SaveFile(std::string fileName, const std::vector<unsigned char>& file, bool isAppend)
 {
     std::fstream FHout;
     if (isAppend)
@@ -130,7 +130,7 @@ void dirtyWriter::SaveFile(std::string fileName, const std::vector<unsigned char
     FHout.close();
 }
 
-bool dirtyWriter::ReplaceSubstring(std::string& str, const std::string& from, const std::string& to)
+bool DirtyWriter::ReplaceSubstring(std::string& str, const std::string& from, const std::string& to)
 {
     size_t start_pos = str.find(from);
     if(start_pos == std::string::npos)
@@ -139,7 +139,7 @@ bool dirtyWriter::ReplaceSubstring(std::string& str, const std::string& from, co
     return true;
 }
 
-void dirtyWriter::ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to)
+void DirtyWriter::ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to)
 {
     if(from.empty())
         return;
@@ -151,20 +151,20 @@ void dirtyWriter::ReplaceAllSubstring(std::string& str, const std::string& from,
     }
 }
 
-std::string dirtyWriter::GetFolderPath(const std::string& fullPath)
+std::string DirtyWriter::GetFolderPath(const std::string& fullPath)
 {
     size_t found = fullPath.find_last_of("/\\");
     return fullPath.substr(0, found);
 }
 
-std::string dirtyWriter::GetFileName(const std::string& fullPath)
+std::string DirtyWriter::GetFileName(const std::string& fullPath)
 {
     size_t found = fullPath.find_last_of("/\\");
     return fullPath.substr(found + 1);
 }
 
 // override
-bool dirtyWriter::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool DirtyWriter::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -189,7 +189,7 @@ bool dirtyWriter::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 }
 
 // override
-void* dirtyWriter::Main()
+void* DirtyWriter::Main()
 {
     LOGMSG_INFO("IN");
 

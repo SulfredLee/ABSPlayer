@@ -1,25 +1,25 @@
-#include "playerMsgQ.h"
+#include "PlayerMsgQ.h"
 #include "Logger.h"
 
-playerMsgQ::playerMsgQ()
+PlayerMsgQ::PlayerMsgQ()
 {
     m_totalMsgSizeLimit = 0;
     m_totalMsgSize = 0;
     pthread_cond_init(&m_cond, NULL);
 }
 
-playerMsgQ::~playerMsgQ()
+PlayerMsgQ::~PlayerMsgQ()
 {
     pthread_cond_destroy(&m_cond);
 }
 
-void playerMsgQ::InitComponent(size_t totalMsgSizeLimit)
+void PlayerMsgQ::InitComponent(size_t totalMsgSizeLimit)
 {
     DefaultLock lock(&m_mutex);
     m_totalMsgSizeLimit = totalMsgSizeLimit;
 }
 
-bool playerMsgQ::AddMsg(std::shared_ptr<PlayerMsg_Base> msg)
+bool PlayerMsgQ::AddMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     DefaultLock lock(&m_mutex);
     bool ret = false;
@@ -38,7 +38,7 @@ bool playerMsgQ::AddMsg(std::shared_ptr<PlayerMsg_Base> msg)
     return ret;
 }
 
-void playerMsgQ::GetMsg(std::shared_ptr<PlayerMsg_Base>& msg)
+void PlayerMsgQ::GetMsg(std::shared_ptr<PlayerMsg_Base>& msg)
 {
     pthread_mutex_lock(m_mutex.GetMutex());
     while (m_msgQ.size() == 0)
@@ -51,13 +51,13 @@ void playerMsgQ::GetMsg(std::shared_ptr<PlayerMsg_Base>& msg)
     pthread_mutex_unlock(m_mutex.GetMutex());
 }
 
-int playerMsgQ::GetMsgNum()
+int PlayerMsgQ::GetMsgNum()
 {
     DefaultLock lock(&m_mutex);
     return m_msgQ.size();
 }
 
-int playerMsgQ::GetTotalMsgSize()
+int PlayerMsgQ::GetTotalMsgSize()
 {
     DefaultLock lock(&m_mutex);
     return m_totalMsgSize;

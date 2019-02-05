@@ -1,22 +1,22 @@
 #ifndef SEGMENTSELECTOR_H
 #define SEGMENTSELECTOR_H
-#include "linuxThread.h"
-#include "cmdReceiver.h"
-#include "playerMsgQ.h"
+#include "LinuxThread.h"
+#include "CmdReceiver.h"
+#include "PlayerMsgQ.h"
 #include "PlayerMsg_Common.h"
-#include "playerStatus.h"
+#include "PlayerStatus.h"
 #include "PlayerMsg_Factory.h"
-#include "playerTimer.h"
+#include "PlayerTimer.h"
 
 #include <memory>
 
-class segmentSelector : public linuxThread, public cmdReceiver
+class SegmentSelector : public LinuxThread, public CmdReceiver
 {
  public:
-    segmentSelector();
-    virtual ~segmentSelector();
+    SegmentSelector();
+    virtual ~SegmentSelector();
 
-    virtual void InitComponent(cmdReceiver* manager);
+    virtual void InitComponent(CmdReceiver* manager);
     // override
     bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
  protected:
@@ -35,10 +35,10 @@ class segmentSelector : public linuxThread, public cmdReceiver
     void* Main();
  protected:
     PlayerMsg_Factory m_msgFactory;
-    playerTimer m_eventTimer;
+    PlayerTimer m_eventTimer;
  private:
-    cmdReceiver* m_manager;
-    playerMsgQ m_msgQ;
+    CmdReceiver* m_manager;
+    PlayerMsgQ m_msgQ;
 };
 
 #endif

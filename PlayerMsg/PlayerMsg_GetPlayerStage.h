@@ -1,7 +1,7 @@
 #ifndef PLAYERMSG_GETPLAYERSTAGE_H
 #define PLAYERMSG_GETPLAYERSTAGE_H
 #include "PlayerMsg_Base.h"
-#include "playerStatus.h"
+#include "PlayerStatus.h"
 
 class PlayerMsg_GetPlayerStage : public PlayerMsg_Base
 {
