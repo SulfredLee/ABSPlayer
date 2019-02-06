@@ -20,7 +20,7 @@ MPlayerManager::~MPlayerManager()
     m_subtitleDownloader.DeinitComponent();
     m_eventTimer.DeinitComponent();
     stopThread();
-    std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
+    std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::dynamic_pointer_cast<PlayerMsg_Dummy>(m_msgFactory.CreateMsg(PlayerMsg_Type_Dummy));
     m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
     joinThread();
     LOGMSG_INFO("OUT");
@@ -49,7 +49,11 @@ void MPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_GetPlayerStage> msg)
 
 void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    if (m_preProcessMsgType != msg->GetMsgType())
+    {
+        LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+        m_preProcessMsgType = msg->GetMsgType();
+    }
 
     switch(msg->GetMsgType())
     {
@@ -118,7 +122,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg)
     if (m_segmentSelector) m_segmentSelector->InitComponent(static_cast<CmdReceiver*>(this));
 
     // download mpd file
-    std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::make_shared<PlayerMsg_DownloadMPD>();
+    std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadMPD));
     msgMPD->SetURL(msg->GetURL());
     std::shared_ptr<PlayerMsg_Base> msgTemp = std::static_pointer_cast<PlayerMsg_Base>(msgMPD);
     SendToMPDDownloader(msgTemp);
@@ -145,7 +149,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
         m_playerStatus.ProcessStatusCMD(StatusCMD_Get_ABSFileURL, static_cast<void*>(&ABSUrl));
         if (ABSUrl.length()) // if we have abs url, we will download it and play
         {
-            std::shared_ptr<PlayerMsg_Open> msgOpen = std::make_shared<PlayerMsg_Open>();
+            std::shared_ptr<PlayerMsg_Open> msgOpen= std::dynamic_pointer_cast<PlayerMsg_Open>(m_msgFactory.CreateMsg(PlayerMsg_Type_Open));
             msgOpen->SetURL(ABSUrl);
             ProcessMsg(msgOpen);
             ProcessMsg(msg);
@@ -238,7 +242,11 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
-        SendToAudioDownloader(msg);
+        if (m_audioSegmentURL != msg->GetURL())
+        {
+            SendToAudioDownloader(msg);
+            m_audioSegmentURL = msg->GetURL();
+        }
     }
     else if (msg->GetSender() == "FileDownloader")
     {
@@ -322,7 +330,11 @@ bool MPlayerManager::SendToSubtitleDownloader(std::shared_ptr<PlayerMsg_Base> ms
 // override
 bool MPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+    if (m_preCMDMsgType != msg->GetMsgType())
+    {
+        LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
+        m_preCMDMsgType = msg->GetMsgType();
+    }
 
     bool ret = true;
     switch(msg->GetMsgType())

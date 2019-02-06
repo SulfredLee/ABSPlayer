@@ -1,8 +1,10 @@
 #include "DashSegmentSelector.h"
 #include "Logger.h"
 #include <algorithm>
+#include <sys/time.h>
 #include <ctime>
 
+#define LIVE_TIME_LAG 3000 // 3 sec time lagging for live video
 DashSegmentSelector::DashSegmentSelector()
 {
     m_mpdFile = nullptr;
@@ -26,10 +28,6 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 
     if (!IsStaticMedia(m_mpdFile))
         HandleDynamicMPDRefresh();
-
-    // handle download process status
-    m_videoStatus.m_numberSegment = 0;
-    m_audioStatus.m_numberSegment = 0;
 }
 
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
@@ -46,6 +44,20 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
     std::shared_ptr<PlayerMsg_GetPlayerStage> msgGetStage = std::dynamic_pointer_cast<PlayerMsg_GetPlayerStage>(msgBase);
     if (msgGetStage->GetPlayerStage() == PlayerStage_Play)
     {
+        // prepare start time
+        if (IsStaticMedia(m_mpdFile))
+        {
+            m_videoStatus.m_downloadTime = 0;
+            m_audioStatus.m_downloadTime = 0;
+        }
+        else
+        {
+            struct timeval curTime;
+            gettimeofday(&curTime, NULL);
+            m_videoStatus.m_downloadTime = (curTime.tv_sec * 1000 + curTime.tv_usec / 1000.0) + 0.5 - LIVE_TIME_LAG;
+            m_audioStatus.m_downloadTime = (curTime.tv_sec * 1000 + curTime.tv_usec / 1000.0) + 0.5 - LIVE_TIME_LAG;
+        }
+        m_trickScale = 1000;
         HandleVideoSegment();
         HandleAudioSegment();
         HandleSubtitleSegment();
@@ -76,7 +88,7 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> m
                     if (!m_videoStatus.m_initFileReady)
                         m_videoStatus.m_initFileReady = true;
                     else
-                        m_videoStatus.m_downloadTime += 1000;
+                        m_videoStatus.m_downloadTime = GetNextDownloadTime(m_videoStatus, m_videoStatus.m_downloadTime);
                 }
                 break;
             }
@@ -88,7 +100,7 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> m
                     if (!m_audioStatus.m_initFileReady)
                         m_audioStatus.m_initFileReady = true;
                     else
-                        m_audioStatus.m_downloadTime += 1000;
+                        m_audioStatus.m_downloadTime = GetNextDownloadTime(m_audioStatus, m_audioStatus.m_downloadTime);
                 }
                 break;
             }
@@ -135,12 +147,12 @@ void DashSegmentSelector::HandleVideoSegment()
     GetMediaDuration(m_videoStatus.m_mediaStartTime, m_videoStatus.m_mediaEndTime);
     if (m_videoStatus.m_mediaEndTime && m_videoStatus.m_mediaEndTime <= m_videoStatus.m_downloadTime)
     {
-        LOGMSG_INFO("Video_EOS");
+        LOGMSG_INFO("Video_EOS mediaEndTime: %lu downloadTime: %lu", m_videoStatus.m_mediaEndTime, m_videoStatus.m_downloadTime);
         return;
     }
     else if (m_videoStatus.m_downloadTime < m_videoStatus.m_mediaStartTime)
     {
-        LOGMSG_INFO("Video_BOS");
+        LOGMSG_INFO("Video_BOS mediaStartTime: %lu downloadTime: %lu", m_videoStatus.m_mediaStartTime, m_videoStatus.m_downloadTime);
         return;
     }
 
@@ -184,12 +196,12 @@ void DashSegmentSelector::HandleAudioSegment()
     GetMediaDuration(m_audioStatus.m_mediaStartTime, m_audioStatus.m_mediaEndTime);
     if (m_audioStatus.m_mediaEndTime && m_audioStatus.m_mediaEndTime <= m_audioStatus.m_downloadTime)
     {
-        LOGMSG_INFO("Video_EOS");
+        LOGMSG_INFO("Audio_EOS mediaEndTime: %lu downloadTime: %lu", m_audioStatus.m_mediaEndTime, m_audioStatus.m_downloadTime);
         return;
     }
     else if (m_audioStatus.m_downloadTime < m_audioStatus.m_mediaStartTime)
     {
-        LOGMSG_INFO("Video_BOS");
+        LOGMSG_INFO("Audio_BOS mediaStartTime: %lu downloadTime: %lu", m_audioStatus.m_mediaStartTime, m_audioStatus.m_downloadTime);
         return;
     }
 
@@ -789,4 +801,63 @@ void DashSegmentSelector::GetSegmentNumberFromTimeline(dashMediaStatus& mediaSta
     {
         mediaStatus.m_numberSegment = i;
     }
+}
+
+uint64_t DashSegmentSelector::GetNextDownloadTime(const dashMediaStatus& mediaStatus, const uint64_t& currentDownloadTime)
+{
+    uint64_t result = 0;
+    std::string mediaStr = mediaStatus.m_segmentInfo.SegmentTemplate.media;
+
+    if (mediaStr.find("$Number") != std::string::npos)
+    {
+        if (m_trickScale > 0)
+        {
+            result = currentDownloadTime + GetSegmentDurationMSec(mediaStatus.m_segmentInfo);
+            if (result < currentDownloadTime + m_trickScale) result = currentDownloadTime + m_trickScale;
+            if (result < currentDownloadTime) { LOGMSG_WARN("Overflow"); result = currentDownloadTime; } // overflow case
+        }
+        else
+        {
+            result = currentDownloadTime - GetSegmentDurationMSec(mediaStatus.m_segmentInfo);
+            if (result > currentDownloadTime + m_trickScale) result = currentDownloadTime + m_trickScale;
+            if (result > currentDownloadTime) { LOGMSG_WARN("Overflow"); result = currentDownloadTime; } // overflow case
+        }
+    }
+    else if (mediaStr.find("$Time") != std::string::npos)
+    {
+        if (m_trickScale > 0)
+        {
+            if (mediaStatus.m_segmentInfo.SegmentTemplate.SegmentTimeline.size() > mediaStatus.m_numberSegment + 1)
+            {
+                result = GetSegmentTimeMSec(mediaStatus.m_segmentInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment + 1], mediaStatus.m_segmentInfo);
+                if (result < currentDownloadTime + m_trickScale) result = currentDownloadTime + m_trickScale;
+                if (result < currentDownloadTime) result = GetSegmentTimeMSec(mediaStatus.m_segmentInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment + 1], mediaStatus.m_segmentInfo); // overflow case
+            }
+            else
+            {
+                result = currentDownloadTime + m_trickScale;
+                if (result < currentDownloadTime) { LOGMSG_WARN("Overflow"); result = currentDownloadTime; } // overflow case
+            }
+        }
+        else
+        {
+            if (0 <= mediaStatus.m_numberSegment - 1)
+            {
+                result = GetSegmentTimeMSec(mediaStatus.m_segmentInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment - 1], mediaStatus.m_segmentInfo);
+                if (result > currentDownloadTime + m_trickScale) result = currentDownloadTime + m_trickScale;
+                if (result > currentDownloadTime) result = GetSegmentTimeMSec(mediaStatus.m_segmentInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment - 1], mediaStatus.m_segmentInfo); // overflow case
+            }
+            else
+            {
+                result = currentDownloadTime + m_trickScale;
+                if (result > currentDownloadTime) { LOGMSG_WARN("Overflow"); result = currentDownloadTime; } // overflow case
+            }
+        }
+    }
+    else
+    {
+        LOGMSG_ERROR("No way to get next download time");
+    }
+
+    return result;
 }

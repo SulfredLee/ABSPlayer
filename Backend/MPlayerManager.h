@@ -55,6 +55,8 @@ class MPlayerManager : public LinuxThread, public CmdReceiver
     FileDownloader m_audioDownloader;
     FileDownloader m_subtitleDownloader;
     PlayerStatus m_playerStatus;
+    PlayerMsg_Type m_preProcessMsgType;
+    PlayerMsg_Type m_preCMDMsgType;
     std::shared_ptr<SegmentSelector> m_segmentSelector;
 
     std::string m_videoSegmentURL;

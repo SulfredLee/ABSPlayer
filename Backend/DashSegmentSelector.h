@@ -128,6 +128,7 @@ class DashSegmentSelector : public SegmentSelector
     std::string GetSegmentURL_Static(dashMediaStatus& mediaStatus, const SegmentInfo& videoSegmentInfo, uint64_t& nextDownloadTime);
     std::string GetInitFileURL(const SegmentInfo& targetInfo);
     std::string GetSegmentURL_Dynamic(dashMediaStatus& mediaStatus, const SegmentInfo& targetInfo, uint64_t& nextDownloadTime);
+    uint64_t GetNextDownloadTime(const dashMediaStatus& mediaStatus, const uint64_t& currentDownloadTime);
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
@@ -141,6 +142,7 @@ class DashSegmentSelector : public SegmentSelector
     dashMediaStatus m_audioStatus;
     dashMediaStatus m_subtitleStatus;
     PlayerMsg_Factory m_msgFactory;
+    int m_trickScale;
 };
 
 #endif
