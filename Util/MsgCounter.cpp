@@ -34,10 +34,17 @@ void* MsgCounter::Main()
 {
     LOGMSG_INFO("IN");
 
+    int loopCount = 0;
     while(isThreadRunning())
     {
+        while (loopCount < 10)
+        {
+            if (!isThreadRunning()) break;
+            usleep(500000);
+            loopCount++;
+        }
+        loopCount = 0;
         if (!isThreadRunning()) break;
-        usleep(1000000);
 
         DefaultLock lock(&m_mutex);
         LOGMSG_INFO("================================================================== start print");
