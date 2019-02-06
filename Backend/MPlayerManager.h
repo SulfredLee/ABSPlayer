@@ -59,10 +59,6 @@ class MPlayerManager : public LinuxThread, public CmdReceiver
     std::shared_ptr<SegmentSelector> m_segmentSelector;
     MsgCounter m_processMsgCounter;
     MsgCounter m_cmdMsgCounter;
-
-    std::string m_videoSegmentURL;
-    std::string m_audioSegmentURL;
-    std::string m_subtitleSegmentURL;
 };
 
 #endif

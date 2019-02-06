@@ -221,11 +221,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
-        if (m_videoSegmentURL != msg->GetURL())
-        {
-            SendToVideoDownloader(msg);
-            m_videoSegmentURL = msg->GetURL();
-        }
+        SendToVideoDownloader(msg);
     }
     else if (msg->GetSender() == "FileDownloader")
     {
@@ -240,11 +236,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
-        if (m_audioSegmentURL != msg->GetURL())
-        {
-            SendToAudioDownloader(msg);
-            m_audioSegmentURL = msg->GetURL();
-        }
+        SendToAudioDownloader(msg);
     }
     else if (msg->GetSender() == "FileDownloader")
     {
