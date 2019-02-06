@@ -11,6 +11,7 @@
 #include "PlayerTimer.h"
 #include "DirtyWriter.h"
 #include "PlayerMsg_Factory.h"
+#include "MsgCounter.h"
 
 #include <memory>
 
@@ -55,9 +56,9 @@ class MPlayerManager : public LinuxThread, public CmdReceiver
     FileDownloader m_audioDownloader;
     FileDownloader m_subtitleDownloader;
     PlayerStatus m_playerStatus;
-    PlayerMsg_Type m_preProcessMsgType;
-    PlayerMsg_Type m_preCMDMsgType;
     std::shared_ptr<SegmentSelector> m_segmentSelector;
+    MsgCounter m_processMsgCounter;
+    MsgCounter m_cmdMsgCounter;
 
     std::string m_videoSegmentURL;
     std::string m_audioSegmentURL;

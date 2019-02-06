@@ -36,6 +36,8 @@ void MPlayerManager::InitComponent()
     m_playerStatus.InitComponent();
     m_eventTimer.InitComponent(&m_msgQ);
     m_dirtyWriter.InitComponent();
+    m_processMsgCounter.InitComponent("Manager_ProcessMsgCounter");
+    m_cmdMsgCounter.InitComponent("Manager_cmdMsgCounter");
     startThread();
 }
 
@@ -49,11 +51,7 @@ void MPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_GetPlayerStage> msg)
 
 void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    if (m_preProcessMsgType != msg->GetMsgType())
-    {
-        LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
-        m_preProcessMsgType = msg->GetMsgType();
-    }
+    m_processMsgCounter.AddCount(msg);
 
     switch(msg->GetMsgType())
     {
@@ -330,11 +328,7 @@ bool MPlayerManager::SendToSubtitleDownloader(std::shared_ptr<PlayerMsg_Base> ms
 // override
 bool MPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    if (m_preCMDMsgType != msg->GetMsgType())
-    {
-        LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
-        m_preCMDMsgType = msg->GetMsgType();
-    }
+    m_cmdMsgCounter.AddCount(msg);
 
     bool ret = true;
     switch(msg->GetMsgType())
