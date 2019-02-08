@@ -479,22 +479,40 @@ void DashSegmentSelector::GetSegmentInfo_Base(const SegmentCriteria& criteria, S
     {
         dash::mpd::IPeriod* period = periods[i];
         // handle accumulate period
-        uint64_t timeMSec = 0;
-        GetTimeString2MSec(period->GetDuration(), timeMSec);
+        uint64_t durationTimeMSec = 0;
         bool isCorrectPeriod = false;
         if (period->GetDuration().length()) // handle with duration case
         {
-            if (accumulatePeriodDuration <= criteria.downloadTime && criteria.downloadTime < accumulatePeriodDuration + timeMSec) // select correct period
+            GetTimeString2MSec(period->GetDuration(), durationTimeMSec);
+            if (accumulatePeriodDuration <= criteria.downloadTime && criteria.downloadTime < accumulatePeriodDuration + durationTimeMSec) // select correct period
                 isCorrectPeriod = true;
+            accumulatePeriodDuration += durationTimeMSec;
         }
-        else // handle no duration case
+        else if (period->GetStart().length()) // handle with start case
+        {
+            uint64_t startTimeMSec, endTimeMSec; startTimeMSec = endTimeMSec = 0;
+            GetTimeString2MSec(period->GetStart(), startTimeMSec);
+            if (i < periods.size() - 1)
+            {
+                dash::mpd::IPeriod* nextPeriod = periods[i + 1];
+                GetTimeString2MSec(nextPeriod->GetStart(), endTimeMSec);
+
+                if (startTimeMSec <= criteria.downloadTime && criteria.downloadTime < endTimeMSec)
+                    isCorrectPeriod = true;
+            }
+            else
+            {
+                LOGMSG_WARN("Force to use this period: %s", period->GetId().c_str());
+                isCorrectPeriod = true;
+            }
+        }
+        else
             isCorrectPeriod = true;
 
         if (isCorrectPeriod)
         {
             GetSegmentInfo_Period(criteria, period, resultInfo);
         }
-        accumulatePeriodDuration += timeMSec;
     }
 
     LOGMSG_INFO("selected bandwidth: %u representation id: %s", resultInfo.Representation.bandwidth, resultInfo.Representation.id.c_str());
@@ -502,7 +520,7 @@ void DashSegmentSelector::GetSegmentInfo_Base(const SegmentCriteria& criteria, S
 
 void DashSegmentSelector::GetSegmentInfo_Period(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, SegmentInfo& resultInfo)
 {
-    LOGMSG_DEBUG("IN");
+    LOGMSG_INFO("IN period id: %s", period->GetId().c_str());
     std::vector<dash::mpd::IAdaptationSet *> adaptationsSets = period->GetAdaptationSets();
     for (size_t j = 0; j < adaptationsSets.size(); j++) // loop for every adaptation set
     {
@@ -586,15 +604,15 @@ void DashSegmentSelector::GetMediaDuration(uint64_t& startTime, uint64_t& endTim
     for (size_t i = 0; i < periods.size(); i++)
     {
         dash::mpd::IPeriod* period = periods[i];
-        uint64_t timeMSec = 0;
+        uint64_t durationtimeMSec = 0;
 
         // handle start time
-        GetTimeString2MSec(period->GetStart(), timeMSec);
-        if (startTime > timeMSec)
-            startTime = timeMSec;
+        GetTimeString2MSec(period->GetStart(), durationtimeMSec);
+        if (startTime > durationtimeMSec)
+            startTime = durationtimeMSec;
         // handle end time
-        GetTimeString2MSec(period->GetDuration(), timeMSec);
-        endTime += timeMSec;
+        GetTimeString2MSec(period->GetDuration(), durationtimeMSec);
+        endTime += durationtimeMSec;
     }
 
     if (m_mpdFile->GetMediaPresentationDuration().length())
