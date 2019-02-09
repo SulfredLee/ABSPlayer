@@ -271,8 +271,19 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
                 SendToSegmentSelector(msgNext);
             else
             {
-                LOGMSG_INFO("Process %s later", msg->GetMsgTypeName().c_str());
-                m_eventTimer.AddEvent(msgNext, 500);
+                if (m_errorHandler.IsTryAgain(msg))
+                {
+                    LOGMSG_INFO("Process %s later", msg->GetMsgTypeName().c_str());
+                    m_eventTimer.AddEvent(msgNext, 500);
+                }
+                else
+                {
+                    // skip this segment and process next one
+                    std::shared_ptr<PlayerMsg_UpdateDownloadTime> msgUpdateTime = std::dynamic_pointer_cast<PlayerMsg_UpdateDownloadTime>(m_msgFactory.CreateMsg(PlayerMsg_Type_UpdateDownloadTime));
+                    msgUpdateTime->SetFileType(msgFinish->GetFileType());
+                    SendToSegmentSelector(msgUpdateTime);
+                    SendToSegmentSelector(msgNext);
+                }
             }
         }
     }

@@ -21,6 +21,7 @@ void DashSegmentSelector::InitComponent(CmdReceiver* manager)
     SegmentSelector::InitComponent(manager);
 }
 
+// override
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 {
     m_mpdFile = msg->GetAndMoveMPDFile();
@@ -30,12 +31,14 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
         HandleDynamicMPDRefresh();
 }
 
+// override
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
     m_mpdFile = msg->GetAndMoveMPDFile();
     HandleDynamicMPDRefresh();
 }
 
+// override
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
 {
     // get current player status
@@ -69,17 +72,44 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
     }
 }
 
+// override
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg)
 {
 }
 
+// override
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg)
 {
 }
 
+// override
+void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_UpdateDownloadTime> msg)
+{
+    switch (msg->GetFileType())
+    {
+        case PlayerMsg_Type_DownloadVideo:
+            {
+                m_videoStatus.m_downloadTime = GetNextDownloadTime(m_videoStatus, m_videoStatus.m_downloadTime);
+                break;
+            }
+        case PlayerMsg_Type_DownloadAudio:
+            {
+                m_audioStatus.m_downloadTime = GetNextDownloadTime(m_audioStatus, m_audioStatus.m_downloadTime);
+                break;
+            }
+        case PlayerMsg_Type_DownloadSubtitle:
+            {
+                break;
+            }
+        default:
+            break;
+    }
+}
+
+// override
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
 {
-    switch(msg->GetFileType())
+    switch (msg->GetFileType())
     {
         case PlayerMsg_Type_DownloadVideo:
             {
@@ -111,6 +141,7 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> m
     }
 }
 
+// override
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
 {
     switch(msg->GetSegmentType())

@@ -12,6 +12,7 @@
 #include "DirtyWriter.h"
 #include "PlayerMsg_Factory.h"
 #include "MsgCounter.h"
+#include "ErrorHandler.h"
 
 #include <memory>
 
@@ -59,6 +60,7 @@ class MPlayerManager : public LinuxThread, public CmdReceiver
     std::shared_ptr<SegmentSelector> m_segmentSelector;
     MsgCounter m_processMsgCounter;
     MsgCounter m_cmdMsgCounter;
+    ErrorHandler m_errorHandler;
 };
 
 #endif

@@ -38,6 +38,8 @@ std::shared_ptr<PlayerMsg_Base> PlayerMsg_Factory::CreateMsg(PlayerMsg_Type msgT
             return std::make_shared<PlayerMsg_ProcessNextSegment>();
         case PlayerMsg_Type_RefreshMPD:
             return std::make_shared<PlayerMsg_RefreshMPD>();
+        case PlayerMsg_Type_UpdateDownloadTime:
+            return std::make_shared<PlayerMsg_UpdateDownloadTime>();
         case PlayerMsg_Type_Base:
         default:
             return std::make_shared<PlayerMsg_Base>();

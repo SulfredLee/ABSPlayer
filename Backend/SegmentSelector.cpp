@@ -54,6 +54,11 @@ void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
                 ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(msg));
                 break;
             }
+        case PlayerMsg_Type_UpdateDownloadTime:
+            {
+                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_UpdateDownloadTime>(msg));
+                break;
+            }
         default:
             break;
     }
@@ -93,6 +98,7 @@ bool SegmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
     switch(msg->GetMsgType())
     {
         case PlayerMsg_Type_ProcessNextSegment:
+        case PlayerMsg_Type_UpdateDownloadTime:
         case PlayerMsg_Type_DownloadMPD:
         case PlayerMsg_Type_RefreshMPD:
         case PlayerMsg_Type_DownloadFinish:

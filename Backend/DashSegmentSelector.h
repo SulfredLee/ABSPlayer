@@ -90,13 +90,22 @@ class DashSegmentSelector : public SegmentSelector
     // override
     void InitComponent(CmdReceiver* manager);
  private:
+    // override
     void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
+    // override
     void ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg);
+    // override
     void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg);
+    // override
     void ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg);
+    // override
     void ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg);
+    // override
     void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
+    // override
     void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg);
+    // override
+    void ProcessMsg(std::shared_ptr<PlayerMsg_UpdateDownloadTime> msg);
 
     void InitStatus(dashMediaStatus& status);
 
