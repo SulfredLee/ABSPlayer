@@ -119,6 +119,7 @@ class DashSegmentSelector : public SegmentSelector
     bool IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
+    bool GetDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
     uint32_t GetSegmentDurationMSec(const SegmentInfo& inDownloadInfo);
     uint32_t GetSegmentTimeMSec(const uint64_t& inTime, const SegmentInfo& inDownloadInfo);
     void GetSegmentNumberFromTimeline(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo);
@@ -138,11 +139,14 @@ class DashSegmentSelector : public SegmentSelector
     std::string GetInitFileURL(const SegmentInfo& targetInfo);
     std::string GetSegmentURL_Dynamic(dashMediaStatus& mediaStatus, const SegmentInfo& targetInfo);
     uint64_t GetNextDownloadTime(const dashMediaStatus& mediaStatus, const uint64_t& currentDownloadTime);
+    std::string GetMimeType(dash::mpd::IAdaptationSet* adaptationSet);
+    int32_t GetCurrentTimeZone();
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
     void ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to);
     void HandleDynamicMPDRefresh();
+    // Debug Tools
     void PrintTimeline(const std::vector<uint64_t>& timeline);
  private:
     DefaultMutex m_mutex;

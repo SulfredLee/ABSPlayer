@@ -39,10 +39,9 @@ bool ErrorHandler::IsTryAgain_Video(std::shared_ptr<PlayerMsg_DownloadFinish> ms
     DefaultLock lock(&m_mutex);
 
     if (msg->GetFileName() == m_videoFileName)
-    {
-        m_videoFileName = msg->GetFileName();
         m_videoErrorCount++;
-    }
+    else
+        m_videoFileName = msg->GetFileName();
 
     if (m_videoErrorCount > m_maxErrorCount)
     {
@@ -60,10 +59,9 @@ bool ErrorHandler::IsTryAgain_Audio(std::shared_ptr<PlayerMsg_DownloadFinish> ms
     DefaultLock lock(&m_mutex);
 
     if (msg->GetFileName() == m_audioFileName)
-    {
-        m_audioFileName = msg->GetFileName();
         m_audioErrorCount++;
-    }
+    else
+        m_audioFileName = msg->GetFileName();
 
     if (m_audioErrorCount > m_maxErrorCount)
     {
@@ -81,10 +79,9 @@ bool ErrorHandler::IsTryAgain_Subtitle(std::shared_ptr<PlayerMsg_DownloadFinish>
     DefaultLock lock(&m_mutex);
 
     if (msg->GetFileName() == m_subtitleFileName)
-    {
-        m_subtitleFileName = msg->GetFileName();
         m_subtitleErrorCount++;
-    }
+    else
+        m_subtitleFileName = msg->GetFileName();
 
     if (m_subtitleErrorCount > m_maxErrorCount)
     {

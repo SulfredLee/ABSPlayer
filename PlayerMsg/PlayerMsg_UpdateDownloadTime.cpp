@@ -11,6 +11,7 @@ PlayerMsg_UpdateDownloadTime::~PlayerMsg_UpdateDownloadTime()
 // override
 PlayerMsg_Type PlayerMsg_UpdateDownloadTime::GetMsgType()
 {
+    return PlayerMsg_Type_UpdateDownloadTime;
 }
 
 // override

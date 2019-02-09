@@ -262,12 +262,10 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
         if (m_segmentSelector)
         {
             SendToSegmentSelector(msg);
-            // check response code
-            std::shared_ptr<PlayerMsg_DownloadFinish> msgFinish = std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg);
             // process next segment
             std::shared_ptr<PlayerMsg_ProcessNextSegment> msgNext = std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
-            msgNext->SetSegmentType(msgFinish->GetFileType());
-            if (msgFinish->GetResponseCode() == 200)
+            msgNext->SetSegmentType(msg->GetFileType());
+            if (msg->GetResponseCode() == 200)
                 SendToSegmentSelector(msgNext);
             else
             {
@@ -280,7 +278,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
                 {
                     // skip this segment and process next one
                     std::shared_ptr<PlayerMsg_UpdateDownloadTime> msgUpdateTime = std::dynamic_pointer_cast<PlayerMsg_UpdateDownloadTime>(m_msgFactory.CreateMsg(PlayerMsg_Type_UpdateDownloadTime));
-                    msgUpdateTime->SetFileType(msgFinish->GetFileType());
+                    msgUpdateTime->SetFileType(msg->GetFileType());
                     SendToSegmentSelector(msgUpdateTime);
                     SendToSegmentSelector(msgNext);
                 }

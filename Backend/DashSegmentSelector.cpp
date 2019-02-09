@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <sys/time.h>
 #include <ctime>
+#include <stdio.h>
 
 #define LIVE_TIME_LAG 3000 // 3 sec time lagging for live video
 DashSegmentSelector::DashSegmentSelector()
@@ -55,9 +56,13 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
         }
         else
         {
-            struct timeval curTime;
-            gettimeofday(&curTime, NULL);
-            m_videoStatus.m_downloadTime = (curTime.tv_sec * 1000 + curTime.tv_usec / 1000.0) + 0.5 - LIVE_TIME_LAG;
+            struct timeval curTV;
+            struct timezone curTZ;
+            gettimeofday(&curTV, &curTZ);
+            uint64_t startMSec = 0; GetDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
+            LOGMSG_INFO("startMSec: %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
+
+            m_videoStatus.m_downloadTime = (curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5 - LIVE_TIME_LAG - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
             m_audioStatus.m_downloadTime = m_videoStatus.m_downloadTime;
             LOGMSG_INFO("Live download time: %lu", m_videoStatus.m_downloadTime);
         }
@@ -388,6 +393,33 @@ bool DashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& time
     return true;
 }
 
+bool DashSegmentSelector::GetDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec)
+{
+    if (timeStr.length() == 20)
+    {
+        int year, month, day, hour, minute, second;
+        sscanf(timeStr.c_str(), "%d-%d-%dT%d:%d:%dZ", &year, &month, &day, &hour, &minute, &second);
+
+        struct tm timeInfo;
+        timeInfo.tm_year = year - 1900;
+        timeInfo.tm_mon = month - 1;
+        timeInfo.tm_mday = day;
+        timeInfo.tm_hour = hour;
+        timeInfo.tm_min = minute;
+        timeInfo.tm_sec = second;
+
+        timeMSec = static_cast<uint64_t>(mktime(&timeInfo)) * 1000;
+
+        return true;
+    }
+    else
+    {
+        LOGMSG_ERROR("timeStr format is not correct: %s", timeStr.c_str());
+        return false;
+    }
+
+}
+
 std::vector<uint64_t> DashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate)
 {
     std::vector<uint64_t> result;
@@ -564,7 +596,7 @@ void DashSegmentSelector::GetSegmentInfo_Period(const SegmentCriteria& criteria,
 void DashSegmentSelector::GetSegmentInfo_AdaptationSet(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo)
 {
     LOGMSG_DEBUG("IN");
-    std::string mimeType = adaptationSet->GetMimeType();
+    std::string mimeType = GetMimeType(adaptationSet);
     std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower); // toupper
     if (mimeType.find(criteria.mediaType) != std::string::npos) // found representation
     {
@@ -922,4 +954,34 @@ void DashSegmentSelector::PrintTimeline(const std::vector<uint64_t>& timeline)
         LOGMSG_INFO("i: %lu %lu", i, timeline[i]);
     }
     LOGMSG_INFO("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+}
+
+std::string DashSegmentSelector::GetMimeType(dash::mpd::IAdaptationSet* adaptationSet)
+{
+    std::string mimeType = adaptationSet->GetMimeType();
+    if (mimeType == "")
+    {
+        std::vector<dash::mpd::IRepresentation *> representations = adaptationSet->GetRepresentation();
+        if (representations.size())
+        {
+            dash::mpd::IRepresentation* representation = representations.front();
+            mimeType = representation->GetMimeType();
+        }
+    }
+    return mimeType;
+}
+
+int32_t DashSegmentSelector::GetCurrentTimeZone()
+{
+    time_t curTime = std::time(0);
+    LOGMSG_INFO("time zone checking utc: %s", asctime(gmtime(&curTime)));
+    LOGMSG_INFO("time zone checking local: %s", asctime(localtime(&curTime)));
+
+    struct tm* gmTM = gmtime(&curTime);
+    time_t gmTime = mktime(gmTM);
+    struct tm* localTM = localtime(&curTime);
+    time_t localTime = mktime(localTM);
+
+    LOGMSG_INFO("Time diff: %d", static_cast<int32_t>(localTime - gmTime));
+    return static_cast<int32_t>((localTime - gmTime) / 3600.0 + 0.5);
 }
