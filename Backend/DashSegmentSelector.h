@@ -34,7 +34,7 @@ struct MPD_SegmentTemplate
     uint32_t duration;
     std::string media;
     std::string initialization;
-    std::vector<uint32_t> SegmentTimeline;
+    std::vector<uint64_t> SegmentTimeline;
 };
 
 struct MPD_Representation
@@ -106,7 +106,7 @@ class DashSegmentSelector : public SegmentSelector
 
     // video and audio
     uint32_t GetTargetDownloadSize(const dashMediaStatus& mediaStatus, std::string mediaType);
-    std::vector<uint32_t> GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate);
+    std::vector<uint64_t> GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate);
     bool IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
@@ -134,6 +134,7 @@ class DashSegmentSelector : public SegmentSelector
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
     void ReplaceAllSubstring(std::string& str, const std::string& from, const std::string& to);
     void HandleDynamicMPDRefresh();
+    void PrintTimeline(const std::vector<uint64_t>& timeline);
  private:
     DefaultMutex m_mutex;
     std::shared_ptr<dash::mpd::IMPD> m_mpdFile;

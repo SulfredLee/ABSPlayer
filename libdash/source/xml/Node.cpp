@@ -209,7 +209,7 @@ dash::mpd::Timeline*                        Node::ToTimeline            ()  cons
 
     if (this->HasAttribute("t"))
     {
-        timeline->SetStartTime(strtoul(this->GetAttributeValue("t").c_str(), NULL, 10));
+        timeline->SetStartTime(strtoull(this->GetAttributeValue("t").c_str(), NULL, 10));
     }
     if (this->HasAttribute("d"))
     {

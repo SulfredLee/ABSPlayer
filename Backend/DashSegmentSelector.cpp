@@ -357,33 +357,33 @@ bool DashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& time
     return true;
 }
 
-std::vector<uint32_t> DashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate)
+std::vector<uint64_t> DashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate)
 {
-    std::vector<uint32_t> result;
+    std::vector<uint64_t> result;
     dash::mpd::ISegmentTimeline const * SegmentTimeline = segmentTemplate->GetSegmentTimeline();
     if (SegmentTimeline)
     {
         std::vector<dash::mpd::ITimeline *> timeline = SegmentTimeline->GetTimelines();
         for (size_t i = 0; i < timeline.size(); i++)
         {
-            uint32_t startTime = timeline[i]->GetStartTime();
+            uint64_t startTime = timeline[i]->GetStartTime();
             uint32_t duration = timeline[i]->GetDuration();
             uint32_t repeatCount = timeline[i]->GetRepeatCount();
             if (i == 0)
             {
                 result.push_back(startTime);
                 result.push_back(startTime + duration);
-                LOGMSG_DEBUG("time: %u time: %u", result[0], result[1]);
+                LOGMSG_DEBUG("time: %lu time: %lu", result[0], result[1]);
             }
             else
             {
                 result.push_back(result.back() + duration);
-                LOGMSG_DEBUG("time: %u", result.back());
+                LOGMSG_DEBUG("time: %lu", result.back());
             }
             for (uint32_t j = 0; j < repeatCount; j++)
             {
                 result.push_back(result.back() + duration);
-                LOGMSG_DEBUG("time: %u", result.back());
+                LOGMSG_DEBUG("time: %lu", result.back());
             }
         }
     }
@@ -709,9 +709,9 @@ std::string DashSegmentSelector::GetSegmentURL(dashMediaStatus& mediaStatus, con
     return ss.str();
 }
 
-std::string DashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo)
+std::string DashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStatus, const SegmentInfo& targetInfo)
 {
-    if (segmentInfo.isHasSegmentTemplate)
+    if (targetInfo.isHasSegmentTemplate)
     {
         // check if EOS or BOS
         if (IsEOS(mediaStatus.m_downloadTime, mediaStatus))
@@ -719,24 +719,24 @@ std::string DashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStat
         if (IsBOS(mediaStatus.m_downloadTime, mediaStatus))
             return "Media_BOS";
 
-        std::string mediaStr = segmentInfo.SegmentTemplate.media;
-        ReplaceAllSubstring(mediaStr, "$RepresentationID$", segmentInfo.Representation.id);
+        std::string mediaStr = targetInfo.SegmentTemplate.media;
+        ReplaceAllSubstring(mediaStr, "$RepresentationID$", targetInfo.Representation.id);
 
         if (mediaStr.find("$Number") != std::string::npos)
         {
             // get next segment number
-            mediaStatus.m_numberSegment = mediaStatus.m_downloadTime / GetSegmentDurationMSec(segmentInfo);
-            mediaStatus.m_numberSegment += segmentInfo.SegmentTemplate.startNumber;
+            mediaStatus.m_numberSegment = mediaStatus.m_downloadTime / GetSegmentDurationMSec(targetInfo);
+            mediaStatus.m_numberSegment += targetInfo.SegmentTemplate.startNumber;
 
             HandleStringFormat(mediaStr, mediaStatus.m_numberSegment, "$Number"); // $Number%06$
-            HandleStringFormat(mediaStr, segmentInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
+            HandleStringFormat(mediaStr, targetInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
         }
         else if (mediaStr.find("$Time") != std::string::npos)
         {
-            GetSegmentNumberFromTimeline(mediaStatus, segmentInfo);
+            GetSegmentNumberFromTimeline(mediaStatus, targetInfo);
             // get the string format
-            ReplaceAllSubstring(mediaStr, "$Time$", std::to_string(segmentInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment]));
-            LOGMSG_DEBUG("%s nextDownloadTime: %u", mediaStr.c_str(), segmentInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment]);
+            ReplaceAllSubstring(mediaStr, "$Time$", std::to_string(targetInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment]));
+            LOGMSG_DEBUG("%s nextDownloadTime: %lu", mediaStr.c_str(), targetInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment]);
         }
         else
         {
@@ -781,6 +781,17 @@ std::string DashSegmentSelector::GetSegmentURL_Dynamic(dashMediaStatus& mediaSta
             HandleStringFormat(mediaStr, mediaStatus.m_numberSegment, "$Number"); // $Number%06$
             HandleStringFormat(mediaStr, targetInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
         }
+        else if (mediaStr.find("$Time") != std::string::npos)
+        {
+            GetSegmentNumberFromTimeline(mediaStatus, targetInfo);
+            // get the string format
+            ReplaceAllSubstring(mediaStr, "$Time$", std::to_string(targetInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment]));
+            LOGMSG_DEBUG("SegmentTimeline: %lu numberSegment: %lu", targetInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment], mediaStatus.m_numberSegment);
+        }
+        else
+        {
+            return "Media_EOS";
+        }
         return mediaStr;
     }
     else
@@ -796,7 +807,7 @@ void DashSegmentSelector::GetSegmentNumberFromTimeline(dashMediaStatus& mediaSta
         mediaStatus.m_numberSegment = 0;
     // get next segment number
     bool found = false;
-    uint32_t i = mediaStatus.m_numberSegment;
+    uint64_t i = 0;
     for (; i < segmentInfo.SegmentTemplate.SegmentTimeline.size() - 1; i++)
     {
         if (GetSegmentTimeMSec(segmentInfo.SegmentTemplate.SegmentTimeline[i], segmentInfo) <= mediaStatus.m_downloadTime
@@ -870,4 +881,14 @@ uint64_t DashSegmentSelector::GetNextDownloadTime(const dashMediaStatus& mediaSt
     }
 
     return result;
+}
+
+void DashSegmentSelector::PrintTimeline(const std::vector<uint64_t>& timeline)
+{
+    LOGMSG_INFO(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    for (size_t i = 0; i < timeline.size(); i++)
+    {
+        LOGMSG_INFO("i: %lu %lu", i, timeline[i]);
+    }
+    LOGMSG_INFO("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 }
