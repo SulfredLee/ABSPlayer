@@ -138,9 +138,11 @@ class DashSegmentSelector : public SegmentSelector
     std::string GetSegmentURL_Static(dashMediaStatus& mediaStatus, const SegmentInfo& videoSegmentInfo);
     std::string GetInitFileURL(const SegmentInfo& targetInfo);
     std::string GetSegmentURL_Dynamic(dashMediaStatus& mediaStatus, const SegmentInfo& targetInfo);
-    uint64_t GetNextDownloadTime(const dashMediaStatus& mediaStatus, const uint64_t& currentDownloadTime);
+    uint64_t GetNextDownloadTime(const dashMediaStatus& mediaStatus, uint64_t currentDownloadTime);
     std::string GetMimeType(dash::mpd::IAdaptationSet* adaptationSet);
     int32_t GetCurrentTimeZone();
+    uint64_t GetCurrentDownloadTime(uint32_t liveDelayMSec, uint32_t timeShiftBufferDepthMSec = 0);
+    bool IsDownloadTimeTooOld(const uint64_t& currentDownloadTime);
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);

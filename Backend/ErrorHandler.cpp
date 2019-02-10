@@ -11,7 +11,7 @@ ErrorHandler::ErrorHandler()
     m_audioErrorCount = 0;
     m_subtitleErrorCount = 0;
 
-    m_maxErrorCount = 5;
+    m_maxErrorCount = 10;
 }
 
 ErrorHandler::~ErrorHandler()

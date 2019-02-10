@@ -56,13 +56,7 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
         }
         else
         {
-            struct timeval curTV;
-            struct timezone curTZ;
-            gettimeofday(&curTV, &curTZ);
-            uint64_t startMSec = 0; GetDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
-            LOGMSG_INFO("startMSec: %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
-
-            m_videoStatus.m_downloadTime = (curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5 - LIVE_TIME_LAG - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
+            m_videoStatus.m_downloadTime = GetCurrentDownloadTime(LIVE_TIME_LAG);
             m_audioStatus.m_downloadTime = m_videoStatus.m_downloadTime;
             LOGMSG_INFO("Live download time: %lu", m_videoStatus.m_downloadTime);
         }
@@ -887,10 +881,17 @@ void DashSegmentSelector::GetSegmentNumberFromTimeline(dashMediaStatus& mediaSta
     }
 }
 
-uint64_t DashSegmentSelector::GetNextDownloadTime(const dashMediaStatus& mediaStatus, const uint64_t& currentDownloadTime)
+uint64_t DashSegmentSelector::GetNextDownloadTime(const dashMediaStatus& mediaStatus, uint64_t currentDownloadTime)
 {
     uint64_t result = 0;
     std::string mediaStr = mediaStatus.m_segmentInfo.SegmentTemplate.media;
+
+    if (IsDownloadTimeTooOld(currentDownloadTime))
+    {
+        uint64_t timeShiftBufferDepthMSec = 0;
+        GetTimeString2MSec(m_mpdFile->GetTimeShiftBufferDepth(), timeShiftBufferDepthMSec);
+        currentDownloadTime = GetCurrentDownloadTime(0, timeShiftBufferDepthMSec);
+    }
 
     if (mediaStr.find("$Number") != std::string::npos)
     {
@@ -984,4 +985,33 @@ int32_t DashSegmentSelector::GetCurrentTimeZone()
 
     LOGMSG_INFO("Time diff: %d", static_cast<int32_t>(localTime - gmTime));
     return static_cast<int32_t>((localTime - gmTime) / 3600.0 + 0.5);
+}
+
+uint64_t DashSegmentSelector::GetCurrentDownloadTime(uint32_t liveDelayMSec, uint32_t timeShiftBufferDepthMSec)
+{
+    if (timeShiftBufferDepthMSec)
+        timeShiftBufferDepthMSec -= 5000; // Here we reduce 5 second so that we don't pick the edge
+    struct timeval curTV;
+    struct timezone curTZ;
+    gettimeofday(&curTV, &curTZ);
+    uint64_t startMSec = 0; GetDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
+    LOGMSG_INFO("startMSec: %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
+
+    return (curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
+}
+
+bool DashSegmentSelector::IsDownloadTimeTooOld(const uint64_t& currentDownloadTime)
+{
+    if (IsStaticMedia(m_mpdFile))
+        return false;
+    else
+    {
+        uint64_t timeShiftBufferDepthMSec = 0;
+        GetTimeString2MSec(m_mpdFile->GetTimeShiftBufferDepth(), timeShiftBufferDepthMSec);
+        uint64_t edgeDownloadTime = GetCurrentDownloadTime(0, timeShiftBufferDepthMSec);
+        if (edgeDownloadTime <= currentDownloadTime)
+            return true;
+        else
+            return false;
+    }
 }
