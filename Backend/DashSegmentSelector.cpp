@@ -389,10 +389,21 @@ bool DashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& time
 
 bool DashSegmentSelector::GetDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec)
 {
-    if (timeStr.length() == 20)
+    if (timeStr == "1970-01-01T00:00:00Z")
+    {
+        timeMSec = 0;
+        return true;
+    }
+    else if (timeStr.length() == 20)
     {
         int year, month, day, hour, minute, second;
         sscanf(timeStr.c_str(), "%d-%d-%dT%d:%d:%dZ", &year, &month, &day, &hour, &minute, &second);
+
+        if (year < 1970)
+        {
+            timeMSec = 0;
+            return true;
+        }
 
         struct tm timeInfo;
         timeInfo.tm_year = year - 1900;
@@ -997,7 +1008,10 @@ uint64_t DashSegmentSelector::GetCurrentDownloadTime(uint32_t liveDelayMSec, uin
     uint64_t startMSec = 0; GetDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
     LOGMSG_INFO("startMSec: %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
 
-    return (curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
+    if (startMSec)
+        return (curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
+    else
+        return (curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec;
 }
 
 bool DashSegmentSelector::IsDownloadTimeTooOld(const uint64_t& currentDownloadTime)
