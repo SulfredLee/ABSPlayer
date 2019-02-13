@@ -50,6 +50,21 @@ size_t FileDownloader::WriteFunction(void *contents, size_t size, size_t nmemb, 
     return realsize;
 }
 
+int FileDownloader::ProgressFunction(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)
+{
+    // Wait for future usage
+    // FileDownloader* downloader = static_cast<FileDownloader*>(clientp);
+    return 0;
+}
+
+size_t FileDownloader::HeaderFunction(char *buffer, size_t size, size_t nitems, void *userdata)
+{
+    // Wait for future usage
+    // FileDownloader* downloader = static_cast<FileDownloader*>(userdata);
+    size_t totalSize = size * nitems;
+    return totalSize;
+}
+
 void FileDownloader::SaveToPool(void *contents, size_t size)
 {
     switch (m_msgPool->GetMsgType())
@@ -286,13 +301,25 @@ CURLcode FileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> m
 
     /* send all data to this function  */
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEFUNCTION, WriteFunction);
-
-    /* we pass our 'chunk' struct to the callback function */
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, static_cast<void*>(this));
+    // monitor progress
+    curl_easy_setopt(m_curl_handle, CURLOPT_PROGRESSFUNCTION, ProgressFunction);
+    curl_easy_setopt(m_curl_handle, CURLOPT_PROGRESSDATA, static_cast<void*>(this));
+    // monitor header
+    curl_easy_setopt(m_curl_handle, CURLOPT_HEADERFUNCTION, HeaderFunction);
+    curl_easy_setopt(m_curl_handle, CURLOPT_HEADERDATA, static_cast<void*>(this));
 
     /* some servers don't like requests that are made without a user-agent
        field, so we provide one */
     curl_easy_setopt(m_curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+    // other
+    curl_easy_setopt(m_curl_handle, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(m_curl_handle, CURLOPT_VERBOSE, 0L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_NOBODY ,0);
+    curl_easy_setopt(m_curl_handle, CURLOPT_HEADER, 0);
+    curl_easy_setopt(m_curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(m_curl_handle, CURLOPT_SSL_VERIFYHOST, 0L);
 
     countTimer.Start();
     /* get it! */

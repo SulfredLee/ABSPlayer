@@ -605,8 +605,25 @@ void DashSegmentSelector::GetSegmentInfo_AdaptationSet(const SegmentCriteria& cr
     std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower); // toupper
     if (mimeType.find(criteria.mediaType) != std::string::npos) // found representation
     {
+        bool isCorrectAdaptationSet = false;
         std::string sourceLanguage = adaptationSet->GetLang();
         if (sourceLanguage == criteria.language || sourceLanguage == "" || criteria.language == "*") // select language
+        {
+            isCorrectAdaptationSet = true;
+        }
+
+        std::string roleValue = "";
+        if (adaptationSet->GetRole().size())
+            roleValue = adaptationSet->GetRole()[0]->GetValue();
+        if (roleValue == "" || roleValue != "alternate")
+            isCorrectAdaptationSet = true;
+        else
+        {
+            isCorrectAdaptationSet = false;
+            LOGMSG_INFO("Not a correct adaptation set: %s", roleValue.c_str());
+        }
+
+        if (isCorrectAdaptationSet)
         {
             GetSegmentInfo_Representation(criteria, period, adaptationSet, resultInfo);
         }
@@ -854,6 +871,8 @@ std::string DashSegmentSelector::GetSegmentURL_Dynamic(dashMediaStatus& mediaSta
             GetSegmentNumberFromTimeline(mediaStatus, targetInfo);
             // get the string format
             ReplaceAllSubstring(mediaStr, "$Time$", std::to_string(targetInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment]));
+            HandleStringFormat(mediaStr, targetInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
+
             LOGMSG_DEBUG("SegmentTimeline: %lu numberSegment: %lu", targetInfo.SegmentTemplate.SegmentTimeline[mediaStatus.m_numberSegment], mediaStatus.m_numberSegment);
         }
         else
