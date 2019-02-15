@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "MPlayerManager.h"
+#include "ABSPlayerManager.h"
 #include "PlayerMsg_Common.h"
 #include "Logger.h"
 
@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[])
 {
-    MPlayerManager manager;
+    ABSPlayerManager manager;
     manager.InitComponent();
     CmdReceiver* cmdHandler = static_cast<CmdReceiver*>(&manager);
     bool running = true;

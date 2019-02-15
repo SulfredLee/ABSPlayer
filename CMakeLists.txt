@@ -1,56 +1,85 @@
-set(targetName "mediaPlayer")
-get_filename_component(folderName ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-string(REPLACE " " "_" folderName ${folderName})
+cmake_minimum_required (VERSION 2.8.12)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-unknown-pragmas")
+# Maps to a solution filed (*.sln). The solution will
+# have all targets (exe, lib, dll) as projects (.vcproj)
+project(ABSPlayer)
 
-file(GLOB ${folderName}_inc
-  "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/Backend/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/PlayerMsg/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/include/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/helpers/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/manager/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/metrics/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/mpd/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/network/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/portable/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/xml/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/Util/*.h")
-file(GLOB ${folderName}_src
-  "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/Backend/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/PlayerMsg/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/helpers/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/manager/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/metrics/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/mpd/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/network/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/portable/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libdash/source/xml/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/Util/*.cpp")
+# The version number.
+set (Project_VERSION_MAJOR 1)
+set (Project_VERSION_MINOR 0)
 
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/Util
-  ${CMAKE_CURRENT_SOURCE_DIR}/PlayerMsg
-  ${CMAKE_CURRENT_SOURCE_DIR}/Backend
-  ${CMAKE_CURRENT_SOURCE_DIR}/libdash/include
-  ${libxml2_INCLUDE_DIR}
-  ${libcurl_INCLUDE_DIR})
-  # ${libdash_INCLUDE_DIR})
+# Turn on the ability to create folders to organize projects (.vcproj)
+# It creates "CMakePredefinedTargets" folder by default and adds CMake
+# defined projects like INSTALL.vcproj and ZERO_CHECK.vcproj
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-add_executable(${targetName} ${${folderName}_src})
+# Command to output information to the console
+# Useful for displaying errors, warnings, and debugging
+set(CMAKE_CXX_FLAGS "-Wall -fPIC -std=c++11 -g")
+message(STATUS "Root - cxx Flags: " ${CMAKE_CXX_FLAGS})
 
-target_link_libraries(${targetName}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${libxml2_LIBRARY_DIR}/libxml2.so.2.9.8
-  ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0)
+# Handle Preprocess Flags
+if (UNIX)
+  add_definitions(-DUNIX)
+else ()
+  add_definitions(-DWINDOWS -DWIN32 "/EHsc")
+endif ()
 
-# Creates a folder "executables" and adds target
-# project (*.vcproj) under it
-set_property(TARGET ${targetName} PROPERTY FOLDER "executables")
+# Handle linux libraries
+if (UNIX)
+  find_package(
+    Threads) # include this package to fix problem 001
+else ()
+endif ()
+message(STATUS "Info - CMAKE_THREAD_LIBS_INIT: ${CMAKE_THREAD_LIBS_INIT}")
 
-# Adds logic to INSTALL.vcproj to copy *.exe to destination directory
-install (TARGETS ${targetName} DESTINATION bin)
+# Handle libxml2 libaries
+message(STATUS "Info - preparing for libxml2 -------------------------")
+if (UNIX)
+  set(libxml2_ROOT "/usr/local/libxml2/2.9.8/")
+  set(libxml2_INCLUDE_DIR ${libxml2_ROOT}include/libxml2)
+  set(libxml2_LIBRARY_DIR ${libxml2_ROOT}lib)
+else ()
+endif ()
+if (NOT EXISTS "${libxml2_INCLUDE_DIR}/libxml/uri.h")
+  message(FATAL_ERROR "Error - ${libxml2_INCLUDE_DIR}/uri.h not found")
+  return()
+endif()
+if (NOT EXISTS "${libxml2_LIBRARY_DIR}/libxml2.a")
+  message(FATAL_ERROR "Error - ${libxml2_LIBRARY_DIR}/libxml2.a not found")
+  return()
+endif()
+message(STATUS "Info - libxml2 include path: ${libxml2_INCLUDE_DIR}")
+message(STATUS "Info - libxml2 library path: ${libxml2_LIBRARY_DIR}")
+
+# Handle curl libaries
+message(STATUS "Info - preparing for libcurl -------------------------")
+if (UNIX)
+  set(libcurl_ROOT "/usr/local/libcurl/7.63.0/")
+  set(libcurl_INCLUDE_DIR ${libcurl_ROOT}include)
+  set(libcurl_LIBRARY_DIR ${libcurl_ROOT}lib)
+else ()
+endif ()
+if (NOT EXISTS "${libcurl_INCLUDE_DIR}/curl/curl.h")
+  message(FATAL_ERROR "Error - ${libcurl_INCLUDE_DIR}/curl/curl.h not found")
+  return()
+endif()
+if (NOT EXISTS "${libcurl_LIBRARY_DIR}/libcurl.a")
+  message(FATAL_ERROR "Error - ${libcurl_LIBRARY_DIR}/libcurl.a not found")
+  return()
+endif()
+message(STATUS "Info - libcurl include path: ${libcurl_INCLUDE_DIR}")
+message(STATUS "Info - libcurl library path: ${libcurl_LIBRARY_DIR}")
+
+# Sub-directories where more CMakeLists.txt exist
+add_subdirectory(ABSPlayer)
+
+# build a CPack driven installer package
+include (InstallRequiredSystemLibraries)
+set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
+set (CPACK_PACKAGE_VERSION_MAJOR "${Project_VERSION_MAJOR}")
+set (CPACK_PACKAGE_VERSION_MINOR "${Project_VERSION_MINOR}")
+include (CPack)
+
+# Problem 001
+#        /usr/bin/ld: ... undefined reference to symbol 'pthread_rwlock_wrlock@@GLIBC_2.2.5'

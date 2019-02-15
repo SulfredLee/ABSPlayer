@@ -16,11 +16,11 @@
 
 #include <memory>
 
-class MPlayerManager : public LinuxThread, public CmdReceiver
+class ABSPlayerManager : public LinuxThread, public CmdReceiver
 {
  public:
-    MPlayerManager();
-    ~MPlayerManager();
+    ABSPlayerManager();
+    ~ABSPlayerManager();
 
     void InitComponent();
     // override

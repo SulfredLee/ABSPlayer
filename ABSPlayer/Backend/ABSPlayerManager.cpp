@@ -1,4 +1,4 @@
-#include "MPlayerManager.h"
+#include "ABSPlayerManager.h"
 #include "Logger.h"
 
 #include <iostream>
@@ -7,11 +7,11 @@
 #include "IMPD.h"
 #include "libdash.h"
 
-MPlayerManager::MPlayerManager()
+ABSPlayerManager::ABSPlayerManager()
 {
 }
 
-MPlayerManager::~MPlayerManager()
+ABSPlayerManager::~ABSPlayerManager()
 {
     m_segmentSelector = nullptr;
     m_mpdDownloader.DeinitComponent();
@@ -26,7 +26,7 @@ MPlayerManager::~MPlayerManager()
     LOGMSG_INFO("OUT");
 }
 
-void MPlayerManager::InitComponent()
+void ABSPlayerManager::InitComponent()
 {
     m_msgQ.InitComponent(1024 * 1024 * 10); // 10 MByte buffer for message queue
     m_mpdDownloader.InitComponent(static_cast<CmdReceiver*>(this), "MPD_Download");
@@ -41,7 +41,7 @@ void MPlayerManager::InitComponent()
     startThread();
 }
 
-void MPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_GetPlayerStage> msg)
+void ABSPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_GetPlayerStage> msg)
 {
     PlayerStage stage = PlayerStage_Stop;
     m_playerStatus.ProcessStatusCMD(StatusCMD_Get_Stage, static_cast<void*>(&stage));
@@ -49,7 +49,7 @@ void MPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_GetPlayerStage> msg)
     msgStage->SetPlayerStage(stage);
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
 {
     m_processMsgCounter.AddCount(msg);
 
@@ -105,7 +105,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     }
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg)
 {
     // update status
     PlayerStage stage = PlayerStage_Open;
@@ -126,7 +126,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg)
     SendToMPDDownloader(msgTemp);
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
 {
     // get status
     PlayerStage stage;
@@ -160,19 +160,19 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
     }
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
 {
     SendToSegmentSelector(msg);
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
-        msg->SetSender("MPlayerManager");
+        msg->SetSender("ABSPlayerManager");
         m_eventTimer.AddEvent(msg, msg->GetMinimumUpdatePeriod());
     }
-    else if (msg->GetSender() == "MPlayerManager")
+    else if (msg->GetSender() == "ABSPlayerManager")
     {
         SendToMPDDownloader(msg);
     }
@@ -182,7 +182,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
         {
             if (msg->GetURL().length())
             {
-                msg->SetSender("MPlayerManager");
+                msg->SetSender("ABSPlayerManager");
                 m_eventTimer.AddEvent(msg, 500);
             }
         }
@@ -193,7 +193,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
     }
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 {
     std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg);
     if (msgMPD->IsMPDFileEmpty())
@@ -217,7 +217,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
     }
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
@@ -232,7 +232,7 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
     }
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
@@ -247,11 +247,11 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
     }
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadSubtitle> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadSubtitle> msg)
 {
 }
 
-void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
+void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
 {
     if (!SendToDirtyWriter(msg))
     {
@@ -287,47 +287,47 @@ void MPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
     }
 }
 
-bool MPlayerManager::SendToDirtyWriter(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToDirtyWriter(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    msg->SetSender("MPlayerManager");
+    msg->SetSender("ABSPlayerManager");
     return m_dirtyWriter.UpdateCMD(msg);
 }
 
-bool MPlayerManager::SendToSegmentSelector(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToSegmentSelector(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    msg->SetSender("MPlayerManager");
+    msg->SetSender("ABSPlayerManager");
     if (m_segmentSelector)
         return m_segmentSelector->UpdateCMD(msg);
     else
         return false;
 }
 
-bool MPlayerManager::SendToMPDDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToMPDDownloader(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    msg->SetSender("MPlayerManager");
+    msg->SetSender("ABSPlayerManager");
     return m_mpdDownloader.UpdateCMD(msg);
 }
 
-bool MPlayerManager::SendToVideoDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToVideoDownloader(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    msg->SetSender("MPlayerManager");
+    msg->SetSender("ABSPlayerManager");
     return m_videoDownloader.UpdateCMD(msg);
 }
 
-bool MPlayerManager::SendToAudioDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToAudioDownloader(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    msg->SetSender("MPlayerManager");
+    msg->SetSender("ABSPlayerManager");
     return m_audioDownloader.UpdateCMD(msg);
 }
 
-bool MPlayerManager::SendToSubtitleDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToSubtitleDownloader(std::shared_ptr<PlayerMsg_Base> msg)
 {
-    msg->SetSender("MPlayerManager");
+    msg->SetSender("ABSPlayerManager");
     return m_subtitleDownloader.UpdateCMD(msg);
 }
 
 // override
-bool MPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 {
     m_cmdMsgCounter.AddCount(msg);
 
@@ -363,7 +363,7 @@ bool MPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
 }
 
 // override
-void* MPlayerManager::Main()
+void* ABSPlayerManager::Main()
 {
     LOGMSG_INFO("IN");
 
