@@ -524,7 +524,7 @@ void DashSegmentSelector::HandleDynamicMPDRefresh()
         uint64_t minimumUpdatePeriod;
         GetTimeString2MSec(m_mpdFile->GetMinimumUpdatePeriod(), minimumUpdatePeriod);
 
-        LOGMSG_INFO("minimumUpdatePeriod: %lu", minimumUpdatePeriod);
+        LOGMSG_INFO("minimumUpdatePeriod: %s %lu", m_mpdFile->GetMinimumUpdatePeriod().c_str(), minimumUpdatePeriod);
 
         std::shared_ptr<PlayerMsg_RefreshMPD> msgRefresh = std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(m_msgFactory.CreateMsg(PlayerMsg_Type_RefreshMPD));
         msgRefresh->SetURL(m_mpdFileURL);
@@ -1025,12 +1025,12 @@ uint64_t DashSegmentSelector::GetCurrentDownloadTime(uint32_t liveDelayMSec, uin
     struct timezone curTZ;
     gettimeofday(&curTV, &curTZ);
     uint64_t startMSec = 0; GetDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
-    LOGMSG_INFO("startMSec: %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
+    LOGMSG_INFO("startMSec: %s %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", m_mpdFile->GetAvailabilityStarttime().c_str(), startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
 
     if (startMSec)
-        return (curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
+        return (static_cast<uint64_t>(curTV.tv_sec) * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
     else
-        return (curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec;
+        return (static_cast<uint64_t>(curTV.tv_sec) * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec;
 }
 
 bool DashSegmentSelector::IsDownloadTimeTooOld(const uint64_t& currentDownloadTime)
