@@ -26,11 +26,23 @@ include_directories(
 
 add_executable(${targetName} ${${folderName}_src})
 
-target_link_libraries(${targetName}
-  ${CMAKE_THREAD_LIBS_INIT}
-  libdash
-  ${libxml2_LIBRARY_DIR}/libxml2.so.2.9.8
-  ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0)
+if (BUILD_TOOL MATCHES "STB")
+  target_link_libraries(${targetName}
+    ${CMAKE_THREAD_LIBS_INIT}
+    libdash
+    ${libxml2_LIBRARY_DIR}/libxml2.so.2.8.0
+    ${libxml2_LIBRARY_DIR}/libz.so.1.2.8
+    ${libcurl_LIBRARY_DIR}/libcrypto.so.1.0.0
+    ${libcurl_LIBRARY_DIR}/libssl.so.1.0.0
+    ${libcurl_LIBRARY_DIR}/libcares.so.2.2.0
+    ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0)
+else ()
+  target_link_libraries(${targetName}
+    ${CMAKE_THREAD_LIBS_INIT}
+    libdash
+    ${libxml2_LIBRARY_DIR}/libxml2.so.2.9.8
+    ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0)
+endif ()
 
 add_subdirectory(libdash)
 

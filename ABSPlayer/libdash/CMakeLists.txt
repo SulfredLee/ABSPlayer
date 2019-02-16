@@ -29,9 +29,19 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 # state that this project is a library
 add_library(${targetName} ${${folderName}_src}) # static library
 # add_library(${targetName} SHARED ${${folderName}_src}) # dynamic library
-target_link_libraries(${targetName}
-  ${libxml2_LIBRARY_DIR}/libxml2.so.2.9.8
-  ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0)
+if (BUILD_TOOL MATCHES "STB")
+  target_link_libraries(${targetName}
+    ${libxml2_LIBRARY_DIR}/libxml2.so.2.8.0
+    ${libxml2_LIBRARY_DIR}/libz.so.1.2.8
+    ${libcurl_LIBRARY_DIR}/libcrypto.so.1.0.0
+    ${libcurl_LIBRARY_DIR}/libssl.so.1.0.0
+    ${libcurl_LIBRARY_DIR}/libcares.so.2.2.0
+    ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0)
+else ()
+  target_link_libraries(${targetName}
+    ${libxml2_LIBRARY_DIR}/libxml2.so.2.9.8
+    ${libcurl_LIBRARY_DIR}/libcurl.so.4.5.0)
+endif ()
 
 # Creates a folder "libraries" and adds target project (*.vcproj) under it
 set_property(TARGET ${targetName} PROPERTY FOLDER "libraries")

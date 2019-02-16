@@ -121,11 +121,11 @@ bool DirtyWriter::makePath(const std::string& path)
 
 void DirtyWriter::SaveFile(std::string fileName, const std::vector<unsigned char>& file, bool isAppend)
 {
-    std::fstream FHout;
+    std::ofstream FHout;
     if (isAppend)
-        FHout = std::fstream(fileName, std::ios::app | std::ios::binary);
+        FHout.open(fileName, std::ios::app | std::ios::binary);
     else
-        FHout = std::fstream(fileName, std::ios::out | std::ios::binary);
+        FHout.open(fileName, std::ios::out | std::ios::binary);
     FHout.write((char*)&file[0], file.size());
     FHout.close();
 }
