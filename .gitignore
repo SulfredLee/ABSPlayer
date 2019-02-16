@@ -1,0 +1,11 @@
+debug/
+release/
+build/
+data/
+third_party/
+data/
+cscope.*
+GPATH
+GRTAGS
+GTAGS
+.clang_complete
