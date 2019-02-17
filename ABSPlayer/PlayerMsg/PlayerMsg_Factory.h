@@ -2,8 +2,8 @@
 #define PLAYERMSG_FACTORY_H
 #include "PlayerMsg_Base.h"
 #include "PlayerMsg_Common.h"
+#include "SmartPointer.h"
 
-#include <memory>
 
 class PlayerMsg_Factory
 {
@@ -11,7 +11,7 @@ class PlayerMsg_Factory
     PlayerMsg_Factory();
     ~PlayerMsg_Factory();
 
-    std::shared_ptr<PlayerMsg_Base> CreateMsg(PlayerMsg_Type msgType);
+    SmartPointer<PlayerMsg_Base> CreateMsg(PlayerMsg_Type msgType);
 };
 
 #endif

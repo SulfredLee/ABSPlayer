@@ -20,22 +20,22 @@ std::string PlayerMsg_RefreshMPD::GetMsgTypeName()
 
 void PlayerMsg_RefreshMPD::SetMPDFile(dash::mpd::IMPD* mpdFile)
 {
-    m_mpdFile = std::shared_ptr<dash::mpd::IMPD>(mpdFile);
+    m_mpdFile = SmartPointer<dash::mpd::IMPD>(mpdFile);
 }
 
-void PlayerMsg_RefreshMPD::SetMPDFile(std::shared_ptr<dash::mpd::IMPD> mpdFile)
+void PlayerMsg_RefreshMPD::SetMPDFile(SmartPointer<dash::mpd::IMPD> mpdFile)
 {
     m_mpdFile = mpdFile;
 }
 
-std::shared_ptr<dash::mpd::IMPD> PlayerMsg_RefreshMPD::GetAndMoveMPDFile()
+SmartPointer<dash::mpd::IMPD> PlayerMsg_RefreshMPD::GetAndMoveMPDFile()
 {
     return std::move(m_mpdFile);
 }
 
 bool PlayerMsg_RefreshMPD::IsMPDFileEmpty()
 {
-    return m_mpdFile == nullptr ? true : false;
+    return m_mpdFile.Get() == nullptr ? true : false;
 }
 
 void PlayerMsg_RefreshMPD::SetMinimumUpdatePeriod(uint64_t minimumUpdatePeriod)

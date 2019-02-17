@@ -13,8 +13,8 @@
 #include "PlayerMsg_Factory.h"
 #include "MsgCounter.h"
 #include "ErrorHandler.h"
+#include "SmartPointer.h"
 
-#include <memory>
 
 class ABSPlayerManager : public LinuxThread, public CmdReceiver
 {
@@ -24,27 +24,27 @@ class ABSPlayerManager : public LinuxThread, public CmdReceiver
 
     void InitComponent();
     // override
-    bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
+    bool UpdateCMD(SmartPointer<PlayerMsg_Base> msg);
  private:
-    void UpdateCMD(std::shared_ptr<PlayerMsg_GetPlayerStage> msg);
+    void UpdateCMD(SmartPointer<PlayerMsg_GetPlayerStage> msg);
 
-    void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadSubtitle> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_Base> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_Open> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_Play> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_ProcessNextSegment> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_RefreshMPD> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadMPD> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadVideo> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadAudio> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadSubtitle> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadFinish> msg);
 
-    bool SendToDirtyWriter(std::shared_ptr<PlayerMsg_Base> msg);
-    bool SendToSegmentSelector(std::shared_ptr<PlayerMsg_Base> msg);
-    bool SendToMPDDownloader(std::shared_ptr<PlayerMsg_Base> msg);
-    bool SendToVideoDownloader(std::shared_ptr<PlayerMsg_Base> msg);
-    bool SendToAudioDownloader(std::shared_ptr<PlayerMsg_Base> msg);
-    bool SendToSubtitleDownloader(std::shared_ptr<PlayerMsg_Base> msg);
+    bool SendToDirtyWriter(SmartPointer<PlayerMsg_Base> msg);
+    bool SendToSegmentSelector(SmartPointer<PlayerMsg_Base> msg);
+    bool SendToMPDDownloader(SmartPointer<PlayerMsg_Base> msg);
+    bool SendToVideoDownloader(SmartPointer<PlayerMsg_Base> msg);
+    bool SendToAudioDownloader(SmartPointer<PlayerMsg_Base> msg);
+    bool SendToSubtitleDownloader(SmartPointer<PlayerMsg_Base> msg);
     // override
     void* Main();
  private:
@@ -57,7 +57,7 @@ class ABSPlayerManager : public LinuxThread, public CmdReceiver
     FileDownloader m_audioDownloader;
     FileDownloader m_subtitleDownloader;
     PlayerStatus m_playerStatus;
-    std::shared_ptr<SegmentSelector> m_segmentSelector;
+    SmartPointer<SegmentSelector> m_segmentSelector;
     MsgCounter m_processMsgCounter;
     MsgCounter m_cmdMsgCounter;
     ErrorHandler m_errorHandler;

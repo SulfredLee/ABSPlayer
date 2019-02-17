@@ -9,11 +9,11 @@ SegmentSelector::~SegmentSelector()
 {
     m_eventTimer.DeinitComponent();
     stopThread();
-    std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
-    m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
+    SmartPointer<PlayerMsg_Dummy> msgDummy = MakeSmartPointer<PlayerMsg_Dummy>();
+    m_msgQ.AddMsg(StaticCast<PlayerMsg_Base>(msgDummy));
 }
 
-void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
+void SegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -21,42 +21,42 @@ void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     {
         case PlayerMsg_Type_Play:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_Play>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_Play>(msg));
                 break;
             }
         case PlayerMsg_Type_Pause:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_Pause>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_Pause>(msg));
                 break;
             }
         case PlayerMsg_Type_Stop:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_Stop>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_Stop>(msg));
                 break;
             }
         case PlayerMsg_Type_DownloadMPD:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadMPD>(msg));
                 break;
             }
         case PlayerMsg_Type_RefreshMPD:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_RefreshMPD>(msg));
                 break;
             }
         case PlayerMsg_Type_DownloadFinish:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadFinish>(msg));
                 break;
             }
         case PlayerMsg_Type_ProcessNextSegment:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_ProcessNextSegment>(msg));
                 break;
             }
         case PlayerMsg_Type_UpdateDownloadTime:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_UpdateDownloadTime>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_UpdateDownloadTime>(msg));
                 break;
             }
         default:
@@ -64,12 +64,12 @@ void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     }
 }
 
-void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+void SegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_DownloadMPD> msg)
 {
     LOGMSG_INFO("Dummy Process message %s", msg->GetMsgTypeName().c_str());
 }
 
-void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+void SegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_RefreshMPD> msg)
 {
     LOGMSG_INFO("Dummy Process message %s", msg->GetMsgTypeName().c_str());
 }
@@ -83,14 +83,14 @@ void SegmentSelector::InitComponent(CmdReceiver* manager)
     startThread();
 }
 
-void SegmentSelector::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
+void SegmentSelector::SendToManager(SmartPointer<PlayerMsg_Base> msg)
 {
     msg->SetSender("SegmentSelector");
     if (m_manager) m_manager->UpdateCMD(msg);
 }
 
 // override
-bool SegmentSelector::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool SegmentSelector::UpdateCMD(SmartPointer<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -126,7 +126,7 @@ void* SegmentSelector::Main()
 
     while(isThreadRunning())
     {
-        std::shared_ptr<PlayerMsg_Base> msg;
+        SmartPointer<PlayerMsg_Base> msg;
         m_msgQ.GetMsg(msg);
 
         ProcessMsg(msg);

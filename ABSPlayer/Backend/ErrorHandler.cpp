@@ -18,7 +18,7 @@ ErrorHandler::~ErrorHandler()
 {
 }
 
-bool ErrorHandler::IsTryAgain(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
+bool ErrorHandler::IsTryAgain(SmartPointer<PlayerMsg_DownloadFinish> msg)
 {
     switch (msg->GetFileType())
     {
@@ -34,7 +34,7 @@ bool ErrorHandler::IsTryAgain(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
     return true;
 }
 
-bool ErrorHandler::IsTryAgain_Video(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
+bool ErrorHandler::IsTryAgain_Video(SmartPointer<PlayerMsg_DownloadFinish> msg)
 {
     DefaultLock lock(&m_mutex);
 
@@ -54,7 +54,7 @@ bool ErrorHandler::IsTryAgain_Video(std::shared_ptr<PlayerMsg_DownloadFinish> ms
         return true;
 }
 
-bool ErrorHandler::IsTryAgain_Audio(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
+bool ErrorHandler::IsTryAgain_Audio(SmartPointer<PlayerMsg_DownloadFinish> msg)
 {
     DefaultLock lock(&m_mutex);
 
@@ -74,7 +74,7 @@ bool ErrorHandler::IsTryAgain_Audio(std::shared_ptr<PlayerMsg_DownloadFinish> ms
         return true;
 }
 
-bool ErrorHandler::IsTryAgain_Subtitle(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
+bool ErrorHandler::IsTryAgain_Subtitle(SmartPointer<PlayerMsg_DownloadFinish> msg)
 {
     DefaultLock lock(&m_mutex);
 

@@ -3,9 +3,9 @@
 #include "ABSPlayerManager.h"
 #include "PlayerMsg_Common.h"
 #include "Logger.h"
+#include "SmartPointer.h"
 
 #include <unistd.h>
-#include <memory>
 
 int main(int argc, char* argv[])
 {
@@ -30,30 +30,30 @@ int main(int argc, char* argv[])
                 {
                     std::cout << "Input url" << std::endl;
                     std::cin >> url;
-                    std::shared_ptr<PlayerMsg_Open> msg = std::make_shared<PlayerMsg_Open>();
+                    SmartPointer<PlayerMsg_Open> msg = MakeSmartPointer<PlayerMsg_Open>();
                     msg->SetURL(url);
-                    std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
+                    SmartPointer<PlayerMsg_Base> msgBase = StaticCast<PlayerMsg_Base>(msg);
                     cmdHandler->UpdateCMD(msgBase);
                     break;
                 }
             case 2:
                 {
-                    std::shared_ptr<PlayerMsg_Play> msg = std::make_shared<PlayerMsg_Play>();
-                    std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
+                    SmartPointer<PlayerMsg_Play> msg = MakeSmartPointer<PlayerMsg_Play>();
+                    SmartPointer<PlayerMsg_Base> msgBase = StaticCast<PlayerMsg_Base>(msg);
                     cmdHandler->UpdateCMD(msgBase);
                     break;
                 }
             case 3:
                 {
-                    std::shared_ptr<PlayerMsg_Pause> msg = std::make_shared<PlayerMsg_Pause>();
-                    std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
+                    SmartPointer<PlayerMsg_Pause> msg = MakeSmartPointer<PlayerMsg_Pause>();
+                    SmartPointer<PlayerMsg_Base> msgBase = StaticCast<PlayerMsg_Base>(msg);
                     cmdHandler->UpdateCMD(msgBase);
                     break;
                 }
             case 4:
                 {
-                    std::shared_ptr<PlayerMsg_Stop> msg = std::make_shared<PlayerMsg_Stop>();
-                    std::shared_ptr<PlayerMsg_Base> msgBase = std::static_pointer_cast<PlayerMsg_Base>(msg);
+                    SmartPointer<PlayerMsg_Stop> msg = MakeSmartPointer<PlayerMsg_Stop>();
+                    SmartPointer<PlayerMsg_Base> msgBase = StaticCast<PlayerMsg_Base>(msg);
                     cmdHandler->UpdateCMD(msgBase);
                     break;
                 }

@@ -91,21 +91,21 @@ class DashSegmentSelector : public SegmentSelector
     void InitComponent(CmdReceiver* manager);
  private:
     // override
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadMPD> msg);
     // override
-    void ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_RefreshMPD> msg);
     // override
-    void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_Play> msg);
     // override
-    void ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_Pause> msg);
     // override
-    void ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_Stop> msg);
     // override
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadFinish> msg);
     // override
-    void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_ProcessNextSegment> msg);
     // override
-    void ProcessMsg(std::shared_ptr<PlayerMsg_UpdateDownloadTime> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_UpdateDownloadTime> msg);
 
     void InitStatus(dashMediaStatus& status);
 
@@ -126,7 +126,7 @@ class DashSegmentSelector : public SegmentSelector
     void AppendSlash2Path(std::string& inPath);
     void HandleStringFormat(std::string& mediaStr, uint64_t data, std::string target);
     void HandleBaseURL(std::stringstream& ss, const SegmentInfo& targetInfo);
-    bool IsStaticMedia(std::shared_ptr<dash::mpd::IMPD> mpdFile);
+    bool IsStaticMedia(SmartPointer<dash::mpd::IMPD> mpdFile);
     void GetSegmentInfo_Base(const SegmentCriteria& criteria, SegmentInfo& resultInfo);
     void GetSegmentInfo_Period(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, SegmentInfo& resultInfo);
     void GetSegmentInfo_AdaptationSet(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo);
@@ -152,7 +152,7 @@ class DashSegmentSelector : public SegmentSelector
     void PrintTimeline(const std::vector<uint64_t>& timeline);
  private:
     DefaultMutex m_mutex;
-    std::shared_ptr<dash::mpd::IMPD> m_mpdFile;
+    SmartPointer<dash::mpd::IMPD> m_mpdFile;
     std::string m_mpdFileURL;
     dashMediaStatus m_videoStatus;
     dashMediaStatus m_audioStatus;

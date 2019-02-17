@@ -50,11 +50,14 @@ template<typename T, typename U>
 template<typename T, typename U>
     SmartPointer<T> DynamicCast(const SmartPointer<U>& smartPointer);
 
+//////////////////////////////////////////////////////////////////////////////////
+// Start implementation
+//////////////////////////////////////////////////////////////////////////////////
+
 template<typename T>
 SmartPointer<T>::SmartPointer()
     : m_pData(NULL), m_pRC(NULL)
 {
-    // std::cout << "constructor 001" << std::endl;
     m_pRC = new ReferenceCount();
 }
 
@@ -62,7 +65,6 @@ template<typename T>
 SmartPointer<T>::SmartPointer(T* pData)
     : m_pData(pData), m_pRC(NULL)
 {
-    // std::cout << "constructor 002" << std::endl;
     m_pRC = new ReferenceCount();
     m_pRC->AddRef();
 }
@@ -71,7 +73,6 @@ template<typename T>
 SmartPointer<T>::SmartPointer(const SmartPointer<T>& smartPointer)
     : m_pData(smartPointer.m_pData), m_pRC(smartPointer.m_pRC)
 {
-    // std::cout << "constructor 003" << std::endl;
     m_pRC->AddRef();
 }
 
@@ -80,17 +81,14 @@ template<typename U>
 SmartPointer<T>::SmartPointer(const SmartPointer<U>& smartPointer, T* pData)
     : m_pData(pData), m_pRC(smartPointer.m_pRC)
 {
-    // std::cout << "constructor 004" << std::endl;
     m_pRC->AddRef();
 }
 
 template<typename T>
 SmartPointer<T>::~SmartPointer()
 {
-    // std::cout << "destructor 001" << std::endl;
-    if (m_pRC->Release() == 0)
+    if (m_pRC->Release() == 0 && m_pData)
     {
-        std::cout << "destructor 002" << std::endl;
         delete m_pData;
         delete m_pRC;
     }

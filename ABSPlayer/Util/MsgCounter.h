@@ -3,9 +3,9 @@
 #include "LinuxThread.h"
 #include "DefaultMutex.h"
 #include "PlayerMsg_Common.h"
+#include "SmartPointer.h"
 
 #include <stdint.h>
-#include <memory>
 #include <map>
 #include <string>
 
@@ -16,7 +16,7 @@ class MsgCounter : public LinuxThread
     ~MsgCounter();
 
     void InitComponent(std::string thisName);
-    void AddCount(std::shared_ptr<PlayerMsg_Base> msg);
+    void AddCount(SmartPointer<PlayerMsg_Base> msg);
     // override
     void* Main();
  private:

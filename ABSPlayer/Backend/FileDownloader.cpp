@@ -15,8 +15,8 @@ FileDownloader::FileDownloader()
 FileDownloader::~FileDownloader()
 {
     stopThread();
-    std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
-    m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
+    SmartPointer<PlayerMsg_Dummy> msgDummy = MakeSmartPointer<PlayerMsg_Dummy>();
+    m_msgQ.AddMsg(StaticCast<PlayerMsg_Base>(msgDummy));
     joinThread();
 
     /* cleanup curl stuff */
@@ -70,13 +70,13 @@ void FileDownloader::SaveToPool(void *contents, size_t size)
     switch (m_msgPool->GetMsgType())
     {
         case PlayerMsg_Type_DownloadVideo:
-            SendPartOfMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadVideo)), contents, size);
+            SendPartOfMsg(DynamicCast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadVideo)), contents, size);
             break;
         case PlayerMsg_Type_DownloadAudio:
-            SendPartOfMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadAudio)), contents, size);
+            SendPartOfMsg(DynamicCast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadAudio)), contents, size);
             break;
         case PlayerMsg_Type_DownloadSubtitle:
-            SendPartOfMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadSubtitle)), contents, size);
+            SendPartOfMsg(DynamicCast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadSubtitle)), contents, size);
             break;
         case PlayerMsg_Type_DownloadMPD:
         case PlayerMsg_Type_RefreshMPD:
@@ -87,16 +87,16 @@ void FileDownloader::SaveToPool(void *contents, size_t size)
     }
 }
 
-void FileDownloader::SendPartOfMsg(std::shared_ptr<PlayerMsg_DownloadFile> msgFile, void *contents, size_t size)
+void FileDownloader::SendPartOfMsg(SmartPointer<PlayerMsg_DownloadFile> msgFile, void *contents, size_t size)
 {
     msgFile->SetURL(m_msgPool->GetURL());
     msgFile->SetFile(static_cast<unsigned char*>(contents), size);
     m_msgPoolSize += size;
     msgFile->SetFileCount(m_msgPoolCount++);
-    SendToManager(msgFile);
+    SendToManager(StaticCast<PlayerMsg_Base>(msgFile));
 }
 
-void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
+void FileDownloader::ProcessMsg(SmartPointer<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -106,24 +106,24 @@ void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
         case PlayerMsg_Type_DownloadVideo:
         case PlayerMsg_Type_DownloadAudio:
         case PlayerMsg_Type_DownloadSubtitle:
-            ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(msg));
+            ProcessMsg(DynamicCast<PlayerMsg_DownloadFile>(msg));
             break;
         case PlayerMsg_Type_DownloadMPD:
-            ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg));
+            ProcessMsg(DynamicCast<PlayerMsg_DownloadMPD>(msg));
             break;
         case PlayerMsg_Type_RefreshMPD:
-            ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(msg));
+            ProcessMsg(DynamicCast<PlayerMsg_RefreshMPD>(msg));
             break;
         default:
             break;
     }
 }
 
-void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
+void FileDownloader::ProcessMsg(SmartPointer<PlayerMsg_DownloadFile> msg)
 {
     CountTimer countTimer;
     int32_t responseCode;
-    CURLcode res = DownloadAFile(msg, countTimer, responseCode);
+    CURLcode res = DownloadAFile(StaticCast<PlayerMsg_DownloadFile>(msg), countTimer, responseCode);
     /* check for errors */
     if(res != CURLE_OK)
     {
@@ -147,11 +147,11 @@ void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFile> msg)
     }
 }
 
-void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+void FileDownloader::ProcessMsg(SmartPointer<PlayerMsg_DownloadMPD> msg)
 {
     CountTimer countTimer;
     int32_t responseCode;
-    CURLcode res = DownloadAFile(msg, countTimer, responseCode);
+    CURLcode res = DownloadAFile(StaticCast<PlayerMsg_DownloadFile>(msg), countTimer, responseCode);
     /* check for errors */
     if(res != CURLE_OK)
     {
@@ -176,16 +176,16 @@ void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
         delete dashManager;
 
         // finished download and alert manager
-        SendToManager(msg);
-        SendDownloadFinishedMsg(countTimer, msg);
+        SendToManager(StaticCast<PlayerMsg_Base>(msg));
+        SendDownloadFinishedMsg(countTimer, StaticCast<PlayerMsg_DownloadFile>(msg));
     }
 }
 
-void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+void FileDownloader::ProcessMsg(SmartPointer<PlayerMsg_RefreshMPD> msg)
 {
     CountTimer countTimer;
     int32_t responseCode;
-    CURLcode res = DownloadAFile(msg, countTimer, responseCode);
+    CURLcode res = DownloadAFile(StaticCast<PlayerMsg_DownloadFile>(msg), countTimer, responseCode);
     /* check for errors */
     if(res != CURLE_OK)
     {
@@ -210,25 +210,25 @@ void FileDownloader::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
         delete dashManager;
 
         // finished download and alert manager
-        SendToManager(msg);
-        SendDownloadFinishedMsg(countTimer, msg);
+        SendToManager(StaticCast<PlayerMsg_Base>(msg));
+        SendDownloadFinishedMsg(countTimer, StaticCast<PlayerMsg_DownloadFile>(msg));
     }
 }
 
-void FileDownloader::SendToManager(std::shared_ptr<PlayerMsg_Base> msg)
+void FileDownloader::SendToManager(SmartPointer<PlayerMsg_Base> msg)
 {
     msg->SetSender("FileDownloader");
     if (m_manager) m_manager->UpdateCMD(msg);
 }
 
-void FileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::shared_ptr<PlayerMsg_DownloadFile> msg)
+void FileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, SmartPointer<PlayerMsg_DownloadFile> msg)
 {
     uint32_t downloadSpeed;
     if (msg->GetFileLength())
         downloadSpeed = msg->GetFileLength() / countTimer.GetSecondDouble() * 8; // bit per second
     else
         downloadSpeed = m_msgPoolSize / countTimer.GetSecondDouble() * 8; // bit per second
-    std::shared_ptr<PlayerMsg_DownloadFinish> msgFinish = std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadFinish));
+    SmartPointer<PlayerMsg_DownloadFinish> msgFinish = DynamicCast<PlayerMsg_DownloadFinish>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadFinish));
     msgFinish->SetFileName(msg->GetURL());
     msgFinish->SetSize(msg->GetFileLength());
     msgFinish->SetSpeed(downloadSpeed);
@@ -237,11 +237,11 @@ void FileDownloader::SendDownloadFinishedMsg(const CountTimer& countTimer, std::
     msgFinish->SetDownloadTime(msg->GetDownloadTime());
     msgFinish->SetResponseCode(msg->GetResponseCode());
 
-    SendToManager(msgFinish);
+    SendToManager(StaticCast<PlayerMsg_Base>(msgFinish));
 }
 
 // override
-bool FileDownloader::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool FileDownloader::UpdateCMD(SmartPointer<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -275,7 +275,7 @@ void* FileDownloader::Main()
 
     while(isThreadRunning())
     {
-        std::shared_ptr<PlayerMsg_Base> msg;
+        SmartPointer<PlayerMsg_Base> msg;
         m_msgQ.GetMsg(msg);
 
         ProcessMsg(msg);
@@ -285,7 +285,7 @@ void* FileDownloader::Main()
     return NULL;
 }
 
-CURLcode FileDownloader::DownloadAFile(std::shared_ptr<PlayerMsg_DownloadFile> msg, CountTimer& countTimer, int32_t& responseCode)
+CURLcode FileDownloader::DownloadAFile(SmartPointer<PlayerMsg_DownloadFile> msg, CountTimer& countTimer, int32_t& responseCode)
 {
     // handle message pool so that we can download and process part of the message
     m_msgPool = msg;

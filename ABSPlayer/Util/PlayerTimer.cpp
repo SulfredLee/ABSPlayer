@@ -37,7 +37,7 @@ void PlayerTimer::AddEvent(PlayerMsg_Type msgType, uint64_t timeMSec, bool repea
     AddEvent_priv(targetTime, tempEvent);
 }
 
-void PlayerTimer::AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec)
+void PlayerTimer::AddEvent(SmartPointer<PlayerMsg_Base> msg, uint64_t timeMSec)
 {
     uint64_t targetTime = GetCurrentMSec() + timeMSec;
     PlayerTimerEvent tempEvent = {msg->GetMsgType(), msg, targetTime, timeMSec, false};
@@ -104,7 +104,7 @@ void* PlayerTimer::Main()
                 // handle timer event
                 if (m_msgQ)
                 {
-                    if (it->second.m_msg != nullptr)
+                    if (it->second.m_msg.Get())
                         m_msgQ->AddMsg(it->second.m_msg);
                     else
                         m_msgQ->AddMsg(m_msgFactory.CreateMsg(it->second.m_msgType));

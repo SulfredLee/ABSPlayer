@@ -6,14 +6,14 @@
 #include "PlayerMsg_Common.h"
 #include "PlayerMsg_Factory.h"
 #include "DefaultMutex.h"
+#include "SmartPointer.h"
 
 #include <map>
-#include <memory>
 
 struct PlayerTimerEvent
 {
     PlayerMsg_Type m_msgType;
-    std::shared_ptr<PlayerMsg_Base> m_msg;
+    SmartPointer<PlayerMsg_Base> m_msg;
     uint64_t m_targetTime;
     uint64_t m_duration;
     bool m_repeat;
@@ -28,7 +28,7 @@ class PlayerTimer : public LinuxThread
     void InitComponent(PlayerMsgQ* msgQ);
     void DeinitComponent();
     void AddEvent(PlayerMsg_Type msgType, uint64_t timeMSec, bool repeat);
-    void AddEvent(std::shared_ptr<PlayerMsg_Base> msg, uint64_t timeMSec);
+    void AddEvent(SmartPointer<PlayerMsg_Base> msg, uint64_t timeMSec);
     void RemoveEvent(PlayerMsg_Type msgType);
  private:
     uint64_t GetCurrentMSec();

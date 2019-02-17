@@ -4,8 +4,8 @@
 #include "CmdReceiver.h"
 #include "PlayerMsgQ.h"
 #include "PlayerMsg_Factory.h"
+#include "SmartPointer.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,11 +17,11 @@ class DirtyWriter : public LinuxThread, public CmdReceiver
 
     void InitComponent();
     // override
-    bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
+    bool UpdateCMD(SmartPointer<PlayerMsg_Base> msg);
  private:
-    void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg);
-    void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_Base> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadVideo> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_DownloadAudio> msg);
     // override
     void* Main();
 

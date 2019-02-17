@@ -7,8 +7,8 @@
 #include "PlayerStatus.h"
 #include "PlayerMsg_Factory.h"
 #include "PlayerTimer.h"
+#include "SmartPointer.h"
 
-#include <memory>
 
 class SegmentSelector : public LinuxThread, public CmdReceiver
 {
@@ -18,20 +18,20 @@ class SegmentSelector : public LinuxThread, public CmdReceiver
 
     virtual void InitComponent(CmdReceiver* manager);
     // override
-    bool UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg);
+    bool UpdateCMD(SmartPointer<PlayerMsg_Base> msg);
  protected:
-    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg);
-    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg);
-    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg) = 0;
-    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg) = 0;
-    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg) = 0;
-    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg) = 0;
-    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg) = 0;
-    virtual void ProcessMsg(std::shared_ptr<PlayerMsg_UpdateDownloadTime> msg) = 0;
+    virtual void ProcessMsg(SmartPointer<PlayerMsg_DownloadMPD> msg);
+    virtual void ProcessMsg(SmartPointer<PlayerMsg_RefreshMPD> msg);
+    virtual void ProcessMsg(SmartPointer<PlayerMsg_Play> msg) = 0;
+    virtual void ProcessMsg(SmartPointer<PlayerMsg_Pause> msg) = 0;
+    virtual void ProcessMsg(SmartPointer<PlayerMsg_Stop> msg) = 0;
+    virtual void ProcessMsg(SmartPointer<PlayerMsg_DownloadFinish> msg) = 0;
+    virtual void ProcessMsg(SmartPointer<PlayerMsg_ProcessNextSegment> msg) = 0;
+    virtual void ProcessMsg(SmartPointer<PlayerMsg_UpdateDownloadTime> msg) = 0;
 
-    void SendToManager(std::shared_ptr<PlayerMsg_Base> msg);
+    void SendToManager(SmartPointer<PlayerMsg_Base> msg);
  private:
-    void ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg);
+    void ProcessMsg(SmartPointer<PlayerMsg_Base> msg);
     // override
     void* Main();
  protected:

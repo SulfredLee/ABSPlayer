@@ -23,7 +23,7 @@ void DashSegmentSelector::InitComponent(CmdReceiver* manager)
 }
 
 // override
-void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+void DashSegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_DownloadMPD> msg)
 {
     m_mpdFile = msg->GetAndMoveMPDFile();
     m_mpdFileURL = msg->GetURL();
@@ -33,19 +33,19 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 }
 
 // override
-void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+void DashSegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_RefreshMPD> msg)
 {
     m_mpdFile = msg->GetAndMoveMPDFile();
     HandleDynamicMPDRefresh();
 }
 
 // override
-void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
+void DashSegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_Play> msg)
 {
     // get current player status
-    std::shared_ptr<PlayerMsg_Base> msgBase = m_msgFactory.CreateMsg(PlayerMsg_Type_GetPlayerStage);
+    SmartPointer<PlayerMsg_Base> msgBase = m_msgFactory.CreateMsg(PlayerMsg_Type_GetPlayerStage);
     SendToManager(msgBase);
-    std::shared_ptr<PlayerMsg_GetPlayerStage> msgGetStage = std::dynamic_pointer_cast<PlayerMsg_GetPlayerStage>(msgBase);
+    SmartPointer<PlayerMsg_GetPlayerStage> msgGetStage = DynamicCast<PlayerMsg_GetPlayerStage>(msgBase);
     if (msgGetStage->GetPlayerStage() == PlayerStage_Play)
     {
         // prepare start time
@@ -72,17 +72,17 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
 }
 
 // override
-void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Pause> msg)
+void DashSegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_Pause> msg)
 {
 }
 
 // override
-void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Stop> msg)
+void DashSegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_Stop> msg)
 {
 }
 
 // override
-void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_UpdateDownloadTime> msg)
+void DashSegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_UpdateDownloadTime> msg)
 {
     switch (msg->GetFileType())
     {
@@ -106,7 +106,7 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_UpdateDownloadTim
 }
 
 // override
-void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
+void DashSegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_DownloadFinish> msg)
 {
     switch (msg->GetFileType())
     {
@@ -141,7 +141,7 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> m
 }
 
 // override
-void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
+void DashSegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_ProcessNextSegment> msg)
 {
     switch(msg->GetSegmentType())
     {
@@ -213,10 +213,10 @@ void DashSegmentSelector::HandleVideoSegment()
     if (targetURL.length())
     {
         // send download message
-        std::shared_ptr<PlayerMsg_DownloadFile> msgDVideo = std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadVideo));
+        SmartPointer<PlayerMsg_DownloadFile> msgDVideo = DynamicCast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadVideo));
         msgDVideo->SetURL(targetURL);
         msgDVideo->SetDownloadTime(m_videoStatus.m_downloadTime);
-        SendToManager(msgDVideo);
+        SendToManager(StaticCast<PlayerMsg_Base>(msgDVideo));
     }
 }
 
@@ -261,10 +261,10 @@ void DashSegmentSelector::HandleAudioSegment()
     if (targetURL.length())
     {
         // send download message
-        std::shared_ptr<PlayerMsg_DownloadFile> msgDAudio = std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadAudio));
+        SmartPointer<PlayerMsg_DownloadFile> msgDAudio = DynamicCast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadAudio));
         msgDAudio->SetURL(targetURL);
         msgDAudio->SetDownloadTime(m_audioStatus.m_downloadTime);
-        SendToManager(msgDAudio);
+        SendToManager(StaticCast<PlayerMsg_Base>(msgDAudio));
     }
 }
 
@@ -512,7 +512,7 @@ void DashSegmentSelector::HandleBaseURL(std::stringstream& ss, const SegmentInfo
     }
 }
 
-bool DashSegmentSelector::IsStaticMedia(std::shared_ptr<dash::mpd::IMPD> mpdFile)
+bool DashSegmentSelector::IsStaticMedia(SmartPointer<dash::mpd::IMPD> mpdFile)
 {
     return mpdFile->GetType() == "static" ? true : false;
 }
@@ -526,10 +526,10 @@ void DashSegmentSelector::HandleDynamicMPDRefresh()
 
         LOGMSG_INFO("minimumUpdatePeriod: %s %lu", m_mpdFile->GetMinimumUpdatePeriod().c_str(), minimumUpdatePeriod);
 
-        std::shared_ptr<PlayerMsg_RefreshMPD> msgRefresh = std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(m_msgFactory.CreateMsg(PlayerMsg_Type_RefreshMPD));
+        SmartPointer<PlayerMsg_RefreshMPD> msgRefresh = DynamicCast<PlayerMsg_RefreshMPD>(m_msgFactory.CreateMsg(PlayerMsg_Type_RefreshMPD));
         msgRefresh->SetURL(m_mpdFileURL);
         msgRefresh->SetMinimumUpdatePeriod(minimumUpdatePeriod);
-        SendToManager(msgRefresh);
+        SendToManager(StaticCast<PlayerMsg_Base>(msgRefresh));
     }
     else
     {

@@ -18,7 +18,7 @@ void MsgCounter::InitComponent(std::string thisName)
     startThread();
 }
 
-void MsgCounter::AddCount(std::shared_ptr<PlayerMsg_Base> msg)
+void MsgCounter::AddCount(SmartPointer<PlayerMsg_Base> msg)
 {
     DefaultLock lock(&m_mutex);
 

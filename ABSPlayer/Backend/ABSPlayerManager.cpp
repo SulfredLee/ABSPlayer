@@ -20,8 +20,8 @@ ABSPlayerManager::~ABSPlayerManager()
     m_subtitleDownloader.DeinitComponent();
     m_eventTimer.DeinitComponent();
     stopThread();
-    std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::dynamic_pointer_cast<PlayerMsg_Dummy>(m_msgFactory.CreateMsg(PlayerMsg_Type_Dummy));
-    m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
+    SmartPointer<PlayerMsg_Dummy> msgDummy = DynamicCast<PlayerMsg_Dummy>(m_msgFactory.CreateMsg(PlayerMsg_Type_Dummy));
+    m_msgQ.AddMsg(StaticCast<PlayerMsg_Base>(msgDummy));
     joinThread();
     LOGMSG_INFO("OUT");
 }
@@ -41,15 +41,15 @@ void ABSPlayerManager::InitComponent()
     startThread();
 }
 
-void ABSPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_GetPlayerStage> msg)
+void ABSPlayerManager::UpdateCMD(SmartPointer<PlayerMsg_GetPlayerStage> msg)
 {
     PlayerStage stage = PlayerStage_Stop;
     m_playerStatus.ProcessStatusCMD(StatusCMD_Get_Stage, static_cast<void*>(&stage));
-    std::shared_ptr<PlayerMsg_GetPlayerStage> msgStage = std::dynamic_pointer_cast<PlayerMsg_GetPlayerStage>(msg);
+    SmartPointer<PlayerMsg_GetPlayerStage> msgStage = DynamicCast<PlayerMsg_GetPlayerStage>(msg);
     msgStage->SetPlayerStage(stage);
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_Base> msg)
 {
     m_processMsgCounter.AddCount(msg);
 
@@ -57,47 +57,47 @@ void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     {
         case PlayerMsg_Type_Open:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_Open>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_Open>(msg));
                 break;
             }
         case PlayerMsg_Type_Play:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_Play>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_Play>(msg));
                 break;
             }
         case PlayerMsg_Type_ProcessNextSegment:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_ProcessNextSegment>(msg));
                 break;
             }
         case PlayerMsg_Type_RefreshMPD:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_RefreshMPD>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_RefreshMPD>(msg));
                 break;
             }
         case PlayerMsg_Type_DownloadMPD:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadMPD>(msg));
                 break;
             }
         case PlayerMsg_Type_DownloadVideo:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadVideo>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadVideo>(msg));
                 break;
             }
         case PlayerMsg_Type_DownloadAudio:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadAudio>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadAudio>(msg));
                 break;
             }
         case PlayerMsg_Type_DownloadSubtitle:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadSubtitle>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadSubtitle>(msg));
                 break;
             }
         case PlayerMsg_Type_DownloadFinish:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadFinish>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadFinish>(msg));
                 break;
             }
         default:
@@ -105,7 +105,7 @@ void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     }
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_Open> msg)
 {
     // update status
     PlayerStage stage = PlayerStage_Open;
@@ -116,17 +116,17 @@ void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Open> msg)
     m_playerStatus.ProcessStatusCMD(StatusCMD_Set_ABSFileURL, static_cast<void*>(&ABSUrl));
 
     // create suitable SegmentSelector
-    m_segmentSelector = std::make_shared<DashSegmentSelector>();
-    if (m_segmentSelector) m_segmentSelector->InitComponent(static_cast<CmdReceiver*>(this));
+    m_segmentSelector = StaticCast<SegmentSelector>(MakeSmartPointer<DashSegmentSelector>());
+    if (m_segmentSelector.Get()) m_segmentSelector->InitComponent(static_cast<CmdReceiver*>(this));
 
     // download mpd file
-    std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadMPD));
+    SmartPointer<PlayerMsg_DownloadMPD> msgMPD = DynamicCast<PlayerMsg_DownloadMPD>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadMPD));
     msgMPD->SetURL(msg->GetURL());
-    std::shared_ptr<PlayerMsg_Base> msgTemp = std::static_pointer_cast<PlayerMsg_Base>(msgMPD);
+    SmartPointer<PlayerMsg_Base> msgTemp = StaticCast<PlayerMsg_Base>(msgMPD);
     SendToMPDDownloader(msgTemp);
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_Play> msg)
 {
     // get status
     PlayerStage stage;
@@ -138,7 +138,7 @@ void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
         m_playerStatus.ProcessStatusCMD(StatusCMD_Set_Stage, static_cast<void*>(&stage));
 
         // signal SegmentSelector
-        SendToSegmentSelector(msg);
+        SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msg));
     }
     else if (stage == PlayerStage_Stop)
     {
@@ -147,7 +147,7 @@ void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
         m_playerStatus.ProcessStatusCMD(StatusCMD_Get_ABSFileURL, static_cast<void*>(&ABSUrl));
         if (ABSUrl.length()) // if we have abs url, we will download it and play
         {
-            std::shared_ptr<PlayerMsg_Open> msgOpen= std::dynamic_pointer_cast<PlayerMsg_Open>(m_msgFactory.CreateMsg(PlayerMsg_Type_Open));
+            SmartPointer<PlayerMsg_Open> msgOpen= DynamicCast<PlayerMsg_Open>(m_msgFactory.CreateMsg(PlayerMsg_Type_Open));
             msgOpen->SetURL(ABSUrl);
             ProcessMsg(msgOpen);
             ProcessMsg(msg);
@@ -160,21 +160,21 @@ void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_Play> msg)
     }
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_ProcessNextSegment> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_ProcessNextSegment> msg)
 {
-    SendToSegmentSelector(msg);
+    SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msg));
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_RefreshMPD> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
         msg->SetSender("ABSPlayerManager");
-        m_eventTimer.AddEvent(msg, msg->GetMinimumUpdatePeriod());
+        m_eventTimer.AddEvent(StaticCast<PlayerMsg_Base>(msg), msg->GetMinimumUpdatePeriod());
     }
     else if (msg->GetSender() == "ABSPlayerManager")
     {
-        SendToMPDDownloader(msg);
+        SendToMPDDownloader(StaticCast<PlayerMsg_Base>(msg));
     }
     else if (msg->GetSender() == "FileDownloader")
     {
@@ -183,19 +183,19 @@ void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
             if (msg->GetURL().length())
             {
                 msg->SetSender("ABSPlayerManager");
-                m_eventTimer.AddEvent(msg, 500);
+                m_eventTimer.AddEvent(StaticCast<PlayerMsg_Base>(msg), 500);
             }
         }
         else
         {
-            SendToSegmentSelector(msg);
+            SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msg));
         }
     }
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_DownloadMPD> msg)
 {
-    std::shared_ptr<PlayerMsg_DownloadMPD> msgMPD = std::dynamic_pointer_cast<PlayerMsg_DownloadMPD>(msg);
+    SmartPointer<PlayerMsg_DownloadMPD> msgMPD = DynamicCast<PlayerMsg_DownloadMPD>(msg);
     if (msgMPD->IsMPDFileEmpty())
     {
         LOGMSG_ERROR("Cannot download mpd file");
@@ -213,121 +213,122 @@ void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
         PlayerStage stage = PlayerStage_Open_Finish;
         m_playerStatus.ProcessStatusCMD(StatusCMD_Set_Stage, static_cast<void*>(&stage));
 
-        SendToSegmentSelector(msg);
+        SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msg));
     }
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_DownloadVideo> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
-        SendToVideoDownloader(msg);
+        SendToVideoDownloader(StaticCast<PlayerMsg_Base>(msg));
     }
     else if (msg->GetSender() == "FileDownloader")
     {
-        if (!SendToDirtyWriter(msg))
+        if (!SendToDirtyWriter(StaticCast<PlayerMsg_Base>(msg)))
         {
-            m_eventTimer.AddEvent(msg, 100); // try to process this message later
+            m_eventTimer.AddEvent(StaticCast<PlayerMsg_Base>(msg), 100); // try to process this message later
         }
     }
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_DownloadAudio> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
-        SendToAudioDownloader(msg);
+        SendToAudioDownloader(StaticCast<PlayerMsg_Base>(msg));
     }
     else if (msg->GetSender() == "FileDownloader")
     {
-        if (!SendToDirtyWriter(msg))
+        if (!SendToDirtyWriter(StaticCast<PlayerMsg_Base>(msg)))
         {
-            m_eventTimer.AddEvent(msg, 100); // try to process this message later
+            m_eventTimer.AddEvent(StaticCast<PlayerMsg_Base>(msg), 100); // try to process this message later
         }
     }
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadSubtitle> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_DownloadSubtitle> msg)
 {
 }
 
-void ABSPlayerManager::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadFinish> msg)
+void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_DownloadFinish> msg)
 {
-    if (!SendToDirtyWriter(msg))
+    if (!SendToDirtyWriter(StaticCast<PlayerMsg_Base>(msg)))
     {
-        m_eventTimer.AddEvent(msg, 100); // try to process this message later
+        m_eventTimer.AddEvent(StaticCast<PlayerMsg_Base>(msg), 100); // try to process this message later
     }
     else
     {
-        if (m_segmentSelector)
+        if (m_segmentSelector.Get())
         {
-            SendToSegmentSelector(msg);
+            SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msg));
             // process next segment
-            std::shared_ptr<PlayerMsg_ProcessNextSegment> msgNext = std::dynamic_pointer_cast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
+            SmartPointer<PlayerMsg_ProcessNextSegment> msgNext = DynamicCast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
             msgNext->SetSegmentType(msg->GetFileType());
             if (msg->GetResponseCode() == 200)
-                SendToSegmentSelector(msgNext);
+                SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msgNext));
             else
             {
                 if (m_errorHandler.IsTryAgain(msg))
                 {
                     LOGMSG_INFO("Process %s later", msg->GetMsgTypeName().c_str());
-                    m_eventTimer.AddEvent(msgNext, 500);
+                    m_eventTimer.AddEvent(StaticCast<PlayerMsg_Base>(msgNext), 500);
                 }
                 else
                 {
                     // skip this segment and process next one
-                    std::shared_ptr<PlayerMsg_UpdateDownloadTime> msgUpdateTime = std::dynamic_pointer_cast<PlayerMsg_UpdateDownloadTime>(m_msgFactory.CreateMsg(PlayerMsg_Type_UpdateDownloadTime));
+                    SmartPointer<PlayerMsg_UpdateDownloadTime> msgUpdateTime = DynamicCast<PlayerMsg_UpdateDownloadTime>(m_msgFactory.CreateMsg(PlayerMsg_Type_UpdateDownloadTime));
                     msgUpdateTime->SetFileType(msg->GetFileType());
-                    SendToSegmentSelector(msgUpdateTime);
-                    SendToSegmentSelector(msgNext);
+                    SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msgUpdateTime));
+                    SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msgNext));
                 }
             }
         }
     }
 }
 
-bool ABSPlayerManager::SendToDirtyWriter(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToDirtyWriter(SmartPointer<PlayerMsg_Base> msg)
 {
     msg->SetSender("ABSPlayerManager");
     return m_dirtyWriter.UpdateCMD(msg);
 }
 
-bool ABSPlayerManager::SendToSegmentSelector(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToSegmentSelector(SmartPointer<PlayerMsg_Base> msg)
 {
     msg->SetSender("ABSPlayerManager");
-    if (m_segmentSelector)
+    if (m_segmentSelector.Get())
         return m_segmentSelector->UpdateCMD(msg);
     else
         return false;
+    return false; // should not go to this point
 }
 
-bool ABSPlayerManager::SendToMPDDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToMPDDownloader(SmartPointer<PlayerMsg_Base> msg)
 {
     msg->SetSender("ABSPlayerManager");
     return m_mpdDownloader.UpdateCMD(msg);
 }
 
-bool ABSPlayerManager::SendToVideoDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToVideoDownloader(SmartPointer<PlayerMsg_Base> msg)
 {
     msg->SetSender("ABSPlayerManager");
     return m_videoDownloader.UpdateCMD(msg);
 }
 
-bool ABSPlayerManager::SendToAudioDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToAudioDownloader(SmartPointer<PlayerMsg_Base> msg)
 {
     msg->SetSender("ABSPlayerManager");
     return m_audioDownloader.UpdateCMD(msg);
 }
 
-bool ABSPlayerManager::SendToSubtitleDownloader(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::SendToSubtitleDownloader(SmartPointer<PlayerMsg_Base> msg)
 {
     msg->SetSender("ABSPlayerManager");
     return m_subtitleDownloader.UpdateCMD(msg);
 }
 
 // override
-bool ABSPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool ABSPlayerManager::UpdateCMD(SmartPointer<PlayerMsg_Base> msg)
 {
     m_cmdMsgCounter.AddCount(msg);
 
@@ -336,7 +337,7 @@ bool ABSPlayerManager::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
     {
         case PlayerMsg_Type_GetPlayerStage:
             {
-                UpdateCMD(std::dynamic_pointer_cast<PlayerMsg_GetPlayerStage>(msg));
+                UpdateCMD(DynamicCast<PlayerMsg_GetPlayerStage>(msg));
                 break;
             }
         case PlayerMsg_Type_Open:
@@ -369,7 +370,7 @@ void* ABSPlayerManager::Main()
 
     while(isThreadRunning())
     {
-        std::shared_ptr<PlayerMsg_Base> msg;
+        SmartPointer<PlayerMsg_Base> msg;
         m_msgQ.GetMsg(msg);
 
         if (!isThreadRunning()) break;

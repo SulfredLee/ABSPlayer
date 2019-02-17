@@ -2,8 +2,8 @@
 #define ERRORHANDLER_H
 #include "DefaultMutex.h"
 #include "PlayerMsg_Common.h"
+#include "SmartPointer.h"
 
-#include <memory>
 #include <string>
 
 class ErrorHandler
@@ -12,10 +12,10 @@ class ErrorHandler
     ErrorHandler();
     ~ErrorHandler();
 
-    bool IsTryAgain(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
-    bool IsTryAgain_Video(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
-    bool IsTryAgain_Audio(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
-    bool IsTryAgain_Subtitle(std::shared_ptr<PlayerMsg_DownloadFinish> msg);
+    bool IsTryAgain(SmartPointer<PlayerMsg_DownloadFinish> msg);
+    bool IsTryAgain_Video(SmartPointer<PlayerMsg_DownloadFinish> msg);
+    bool IsTryAgain_Audio(SmartPointer<PlayerMsg_DownloadFinish> msg);
+    bool IsTryAgain_Subtitle(SmartPointer<PlayerMsg_DownloadFinish> msg);
  private:
     DefaultMutex m_mutex;
 

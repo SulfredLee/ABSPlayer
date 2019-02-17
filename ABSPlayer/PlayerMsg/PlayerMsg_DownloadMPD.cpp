@@ -20,20 +20,20 @@ std::string PlayerMsg_DownloadMPD::GetMsgTypeName()
 
 void PlayerMsg_DownloadMPD::SetMPDFile(dash::mpd::IMPD* mpdFile)
 {
-    m_mpdFile = std::shared_ptr<dash::mpd::IMPD>(mpdFile);
+    m_mpdFile = SmartPointer<dash::mpd::IMPD>(mpdFile);
 }
 
-void PlayerMsg_DownloadMPD::SetMPDFile(std::shared_ptr<dash::mpd::IMPD> mpdFile)
+void PlayerMsg_DownloadMPD::SetMPDFile(SmartPointer<dash::mpd::IMPD> mpdFile)
 {
     m_mpdFile = mpdFile;
 }
 
-std::shared_ptr<dash::mpd::IMPD> PlayerMsg_DownloadMPD::GetAndMoveMPDFile()
+SmartPointer<dash::mpd::IMPD> PlayerMsg_DownloadMPD::GetAndMoveMPDFile()
 {
     return std::move(m_mpdFile);
 }
 
 bool PlayerMsg_DownloadMPD::IsMPDFileEmpty()
 {
-    return m_mpdFile == nullptr ? true : false;
+    return m_mpdFile.Get() == nullptr ? true : false;
 }

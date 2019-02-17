@@ -23,7 +23,7 @@ void DirtyWriter::InitComponent()
     startThread();
 }
 
-void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
+void DirtyWriter::ProcessMsg(SmartPointer<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Process message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -31,12 +31,12 @@ void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     {
         case PlayerMsg_Type_DownloadVideo:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadVideo>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadVideo>(msg));
                 break;
             }
         case PlayerMsg_Type_DownloadAudio:
             {
-                ProcessMsg(std::dynamic_pointer_cast<PlayerMsg_DownloadAudio>(msg));
+                ProcessMsg(DynamicCast<PlayerMsg_DownloadAudio>(msg));
                 break;
             }
         default:
@@ -44,7 +44,7 @@ void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
     }
 }
 
-void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
+void DirtyWriter::ProcessMsg(SmartPointer<PlayerMsg_DownloadVideo> msg)
 {
     std::string fileURL = msg->GetURL();
     ReplaceSubstring(fileURL, "http://", "./");
@@ -61,7 +61,7 @@ void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadVideo> msg)
     }
 }
 
-void DirtyWriter::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadAudio> msg)
+void DirtyWriter::ProcessMsg(SmartPointer<PlayerMsg_DownloadAudio> msg)
 {
     std::string fileURL = msg->GetURL();
     ReplaceSubstring(fileURL, "http://", "./");
@@ -164,7 +164,7 @@ std::string DirtyWriter::GetFileName(const std::string& fullPath)
 }
 
 // override
-bool DirtyWriter::UpdateCMD(std::shared_ptr<PlayerMsg_Base> msg)
+bool DirtyWriter::UpdateCMD(SmartPointer<PlayerMsg_Base> msg)
 {
     LOGMSG_DEBUG("Received message %s from: %s", msg->GetMsgTypeName().c_str(), msg->GetSender().c_str());
 
@@ -195,7 +195,7 @@ void* DirtyWriter::Main()
 
     while(isThreadRunning())
     {
-        std::shared_ptr<PlayerMsg_Base> msg;
+        SmartPointer<PlayerMsg_Base> msg;
         m_msgQ.GetMsg(msg);
 
         if (!isThreadRunning()) break;
