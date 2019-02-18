@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "DefaultMutex.h"
+#include "Logger.h"
 
 class ReferenceCount
 {
@@ -87,9 +88,10 @@ SmartPointer<T>::SmartPointer(const SmartPointer<U>& smartPointer, T* pData)
 template<typename T>
 SmartPointer<T>::~SmartPointer()
 {
-    if (m_pRC->Release() == 0 && m_pData)
+    if (m_pRC->Release() == 0)
     {
-        delete m_pData;
+        if (m_pData)
+            delete m_pData;
         delete m_pRC;
     }
 }
@@ -113,7 +115,8 @@ SmartPointer<T>& SmartPointer<T>::operator = (const SmartPointer<T>& smartPointe
     {
         if (m_pRC->Release() == 0)
         {
-            delete m_pData;
+            if (m_pData)
+                delete m_pData;
             delete m_pRC;
         }
 

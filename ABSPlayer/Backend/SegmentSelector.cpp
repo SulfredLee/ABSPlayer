@@ -11,6 +11,7 @@ SegmentSelector::~SegmentSelector()
     stopThread();
     SmartPointer<PlayerMsg_Dummy> msgDummy = MakeSmartPointer<PlayerMsg_Dummy>();
     m_msgQ.AddMsg(StaticCast<PlayerMsg_Base>(msgDummy));
+    joinThread();
 }
 
 void SegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_Base> msg)
