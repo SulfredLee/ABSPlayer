@@ -11,6 +11,7 @@ SegmentSelector::~SegmentSelector()
     stopThread();
     std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
     m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
+    joinThread();
 }
 
 void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)
