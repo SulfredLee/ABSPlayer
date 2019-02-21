@@ -21,8 +21,6 @@ FileDownloader::~FileDownloader()
 
     /* cleanup curl stuff */
     curl_easy_cleanup(m_curl_handle);
-    /* we're done with libcurl, so clean it up */
-    curl_global_cleanup();
 
     LOGMSG_INFO("OUT");
 }
