@@ -221,7 +221,15 @@ void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_DownloadVideo> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
-        SendToVideoDownloader(StaticCast<PlayerMsg_Base>(msg));
+        if (msg->GetErrorMsg() == "")
+            SendToVideoDownloader(StaticCast<PlayerMsg_Base>(msg));
+        else if (msg->GetErrorMsg() == "Live_Media_EOS")
+        {
+            SmartPointer<PlayerMsg_ProcessNextSegment> msgNext = DynamicCast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
+            msgNext->SetSegmentType(PlayerMsg_Type_DownloadVideo);
+            m_eventTimer.AddEvent(StaticCast<PlayerMsg_Base>(msgNext), 500);
+            LOGMSG_INFO("Wait and then process message with download time: %lu", msg->GetDownloadTime());
+        }
     }
     else if (msg->GetSender() == "FileDownloader")
     {
@@ -236,7 +244,15 @@ void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_DownloadAudio> msg)
 {
     if (msg->GetSender() == "SegmentSelector")
     {
-        SendToAudioDownloader(StaticCast<PlayerMsg_Base>(msg));
+        if (msg->GetErrorMsg() == "")
+            SendToAudioDownloader(StaticCast<PlayerMsg_Base>(msg));
+        else if (msg->GetErrorMsg() == "Live_Media_EOS")
+        {
+            SmartPointer<PlayerMsg_ProcessNextSegment> msgNext = DynamicCast<PlayerMsg_ProcessNextSegment>(m_msgFactory.CreateMsg(PlayerMsg_Type_ProcessNextSegment));
+            msgNext->SetSegmentType(PlayerMsg_Type_DownloadAudio);
+            m_eventTimer.AddEvent(StaticCast<PlayerMsg_Base>(msgNext), 500);
+            LOGMSG_INFO("Wait and then process message with download time: %lu", msg->GetDownloadTime());
+        }
     }
     else if (msg->GetSender() == "FileDownloader")
     {

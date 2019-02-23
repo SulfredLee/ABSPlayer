@@ -143,6 +143,8 @@ class DashSegmentSelector : public SegmentSelector
     int32_t GetCurrentTimeZone();
     uint64_t GetCurrentDownloadTime(uint32_t liveDelayMSec, uint32_t timeShiftBufferDepthMSec = 0);
     bool IsDownloadTimeTooOld(const uint64_t& currentDownloadTime);
+    bool IsDownloadTimeTooEarly(const uint64_t& currentDownloadTime);
+    std::string IsDownloadTimeValid(const uint64_t& currentDownloadTime);
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);

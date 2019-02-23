@@ -85,3 +85,13 @@ int32_t PlayerMsg_DownloadFile::GetResponseCode()
 {
     return m_responseCode;
 }
+
+void PlayerMsg_DownloadFile::SetErrorMsg(std::string errorMsg)
+{
+    m_errorMsg = errorMsg;
+}
+
+std::string PlayerMsg_DownloadFile::GetErrorMsg()
+{
+    return m_errorMsg;
+}

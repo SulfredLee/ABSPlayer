@@ -22,6 +22,7 @@ class PlayerMsg_DownloadFile : public PlayerMsg_Base
     void SetResponseCode(int32_t responseCode);
     void ClearFile();
     void SetDownloadTime(uint64_t downloadTime);
+    void SetErrorMsg(std::string errorMsg);
 
     std::string GetURL();
     std::vector<unsigned char> GetFile();
@@ -29,12 +30,14 @@ class PlayerMsg_DownloadFile : public PlayerMsg_Base
     size_t GetFileLength();
     uint64_t GetDownloadTime();
     int32_t GetResponseCode();
+    std::string GetErrorMsg();
  private:
     std::string m_url;
     std::vector<unsigned char> m_file;
     uint64_t m_downloadTime;
     size_t m_fileCount;
     int32_t m_responseCode;
+    std::string m_errorMsg;
 };
 
 #endif
