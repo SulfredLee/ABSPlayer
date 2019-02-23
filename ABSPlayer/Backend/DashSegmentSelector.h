@@ -122,7 +122,7 @@ class DashSegmentSelector : public SegmentSelector
     bool GetDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
     uint32_t GetSegmentDurationMSec(const SegmentInfo& inDownloadInfo);
     uint32_t GetSegmentTimeMSec(const uint64_t& inTime, const SegmentInfo& inDownloadInfo);
-    void GetSegmentNumberFromTimeline(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo);
+    std::string GetSegmentNumberFromTimeline(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo);
     void AppendSlash2Path(std::string& inPath);
     void HandleStringFormat(std::string& mediaStr, uint64_t data, std::string target);
     void HandleBaseURL(std::stringstream& ss, const SegmentInfo& targetInfo);
@@ -143,6 +143,8 @@ class DashSegmentSelector : public SegmentSelector
     int32_t GetCurrentTimeZone();
     uint64_t GetCurrentDownloadTime(uint32_t liveDelayMSec, uint32_t timeShiftBufferDepthMSec = 0);
     bool IsDownloadTimeTooOld(const uint64_t& currentDownloadTime);
+    bool IsDownloadTimeTooEarly(const uint64_t& currentDownloadTime);
+    std::string IsDownloadTimeValid(const uint64_t& currentDownloadTime);
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
