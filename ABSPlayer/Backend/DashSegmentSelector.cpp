@@ -641,10 +641,10 @@ void DashSegmentSelector::GetSegmentInfo_Representation(const SegmentCriteria& c
     SegmentInfo highestQualityInfo; highestQualityInfo.Representation.bandwidth = 0;
 
     std::vector<dash::mpd::IRepresentation *> representations = adaptationSet->GetRepresentation();
-    dash::mpd::ISegmentTemplate* segmentTemplate = adaptationSet->GetSegmentTemplate();
     for (size_t k = 0; k < representations.size(); k++) // loop for every representation
     {
         dash::mpd::IRepresentation* representation = representations[k];
+        dash::mpd::ISegmentTemplate* segmentTemplate = representation->GetSegmentTemplate() ? representation->GetSegmentTemplate() : adaptationSet->GetSegmentTemplate();
         uint32_t bandwidth = representation->GetBandwidth();
 
         if (segmentTemplate)
@@ -864,6 +864,7 @@ std::string DashSegmentSelector::GetSegmentURL_Dynamic(dashMediaStatus& mediaSta
         {
             // get next segment number
             mediaStatus.m_numberSegment = mediaStatus.m_downloadTime / GetSegmentDurationMSec(targetInfo);
+            mediaStatus.m_numberSegment += targetInfo.SegmentTemplate.startNumber;
 
             HandleStringFormat(mediaStr, mediaStatus.m_numberSegment, "$Number"); // $Number%06$
             HandleStringFormat(mediaStr, targetInfo.Representation.bandwidth, "$Bandwidth"); // $Bandwidth%06$
