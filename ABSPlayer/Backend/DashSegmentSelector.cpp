@@ -389,14 +389,9 @@ bool DashSegmentSelector::GetTimeString2MSec(std::string timeStr, uint64_t& time
     return true;
 }
 
-bool DashSegmentSelector::GetDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec)
+bool DashSegmentSelector::GetUTCDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec)
 {
-    if (timeStr == "1970-01-01T00:00:00Z")
-    {
-        timeMSec = 0;
-        return true;
-    }
-    else if (timeStr.length() == 20)
+    if (timeStr.length() == 20)
     {
         int year, month, day, hour, minute, second;
         sscanf(timeStr.c_str(), "%d-%d-%dT%d:%d:%dZ", &year, &month, &day, &hour, &minute, &second);
@@ -415,7 +410,8 @@ bool DashSegmentSelector::GetDateTimeString2MSec(std::string timeStr, uint64_t& 
         timeInfo.tm_min = minute;
         timeInfo.tm_sec = second;
 
-        timeMSec = static_cast<uint64_t>(mktime(&timeInfo)) * 1000;
+        // timeMSec = static_cast<uint64_t>(mktime(&timeInfo)) * 1000;
+        timeMSec = static_cast<uint64_t>(timegm(&timeInfo)) * 1000;
 
         return true;
     }
@@ -424,7 +420,39 @@ bool DashSegmentSelector::GetDateTimeString2MSec(std::string timeStr, uint64_t& 
         LOGMSG_ERROR("timeStr format is not correct: %s", timeStr.c_str());
         return false;
     }
+}
 
+bool DashSegmentSelector::GetLocalDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec)
+{
+    if (timeStr.length() == 20)
+    {
+        int year, month, day, hour, minute, second;
+        sscanf(timeStr.c_str(), "%d-%d-%dT%d:%d:%dZ", &year, &month, &day, &hour, &minute, &second);
+
+        if (year < 1970)
+        {
+            timeMSec = 0;
+            return true;
+        }
+
+        struct tm timeInfo;
+        timeInfo.tm_year = year - 1900;
+        timeInfo.tm_mon = month - 1;
+        timeInfo.tm_mday = day;
+        timeInfo.tm_hour = hour;
+        timeInfo.tm_min = minute;
+        timeInfo.tm_sec = second;
+
+        // timeMSec = static_cast<uint64_t>(mktime(&timeInfo)) * 1000;
+        timeMSec = static_cast<uint64_t>(timelocal(&timeInfo)) * 1000;
+
+        return true;
+    }
+    else
+    {
+        LOGMSG_ERROR("timeStr format is not correct: %s", timeStr.c_str());
+        return false;
+    }
 }
 
 std::vector<uint64_t> DashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate)
@@ -1017,8 +1045,8 @@ uint64_t DashSegmentSelector::GetCurrentDownloadTime(uint32_t liveDelayMSec, uin
 {
     if (timeShiftBufferDepthMSec)
         timeShiftBufferDepthMSec -= 5000; // Here we reduce 5 second so that we don't pick the edge
-    uint64_t startMSec = 0; GetDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
-    uint64_t publishTime = 0; GetDateTimeString2MSec(m_mpdFile->GetPublishTime(), publishTime);
+    uint64_t startMSec = 0; GetUTCDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
+    uint64_t publishTime = 0; GetUTCDateTimeString2MSec(m_mpdFile->GetPublishTime(), publishTime);
     struct timeval curTV;
     struct timezone curTZ;
     gettimeofday(&curTV, &curTZ);
@@ -1026,10 +1054,7 @@ uint64_t DashSegmentSelector::GetCurrentDownloadTime(uint32_t liveDelayMSec, uin
     LOGMSG_INFO("startMSec: %s %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", m_mpdFile->GetAvailabilityStarttime().c_str(), startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
     LOGMSG_INFO("startMSec: %s %lu publishTime: %s %lu", m_mpdFile->GetAvailabilityStarttime().c_str(), startMSec, m_mpdFile->GetPublishTime().c_str(), publishTime);
 
-    if (startMSec)
-        return (static_cast<uint64_t>(curTV.tv_sec) * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
-    else
-        return (static_cast<uint64_t>(curTV.tv_sec) * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec;
+    return (static_cast<uint64_t>(curTV.tv_sec) * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec;
     // if (startMSec)
     //     return publishTime - liveDelayMSec - timeShiftBufferDepthMSec - startMSec;
     // else
