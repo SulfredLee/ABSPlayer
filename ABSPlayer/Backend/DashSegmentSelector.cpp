@@ -410,7 +410,6 @@ bool DashSegmentSelector::GetUTCDateTimeString2MSec(std::string timeStr, uint64_
         timeInfo.tm_min = minute;
         timeInfo.tm_sec = second;
 
-        // timeMSec = static_cast<uint64_t>(mktime(&timeInfo)) * 1000;
         timeMSec = static_cast<uint64_t>(timegm(&timeInfo)) * 1000;
 
         return true;
@@ -443,7 +442,7 @@ bool DashSegmentSelector::GetLocalDateTimeString2MSec(std::string timeStr, uint6
         timeInfo.tm_min = minute;
         timeInfo.tm_sec = second;
 
-        // timeMSec = static_cast<uint64_t>(mktime(&timeInfo)) * 1000;
+        // timeMSec = static_cast<uint64_t>(mktime(&timeInfo)) * 1000; // mktime == timelocal
         timeMSec = static_cast<uint64_t>(timelocal(&timeInfo)) * 1000;
 
         return true;
