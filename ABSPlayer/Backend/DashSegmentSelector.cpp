@@ -218,7 +218,6 @@ void DashSegmentSelector::HandleVideoSegment()
     }
     else
     {
-        msgDVideo->SetErrorMsg(validRtn);
     }
     msgDVideo->SetDownloadTime(m_videoStatus.m_downloadTime);
     SendToManager(StaticCast<PlayerMsg_Base>(msgDVideo));
@@ -266,7 +265,6 @@ void DashSegmentSelector::HandleAudioSegment()
     }
     else
     {
-        msgDAudio->SetErrorMsg(validRtn);
     }
     msgDAudio->SetDownloadTime(m_audioStatus.m_downloadTime);
     SendToManager(StaticCast<PlayerMsg_Base>(msgDAudio));
@@ -1077,22 +1075,22 @@ std::string DashSegmentSelector::IsDownloadTimeValid(const uint64_t& currentDown
     if (mediaEndTime && mediaEndTime <= currentDownloadTime)
     {
         LOGMSG_INFO("Media_EOS %s mediaEndTime: %lu downloadTime: %lu", IsStaticMedia(m_mpdFile) ? "VOD" : "Live", mediaEndTime, currentDownloadTime);
-        return IsStaticMedia(m_mpdFile) ? "Live_Media_EOS" : "Media_EOS";
+        return !IsStaticMedia(m_mpdFile) ? "Live_Media_EOS" : "Media_EOS";
     }
     else if (currentDownloadTime < mediaStartTime)
     {
         LOGMSG_INFO("Media_BOS %s mediaStartTime: %lu downloadTime: %lu", IsStaticMedia(m_mpdFile) ? "VOD" : "Live", mediaStartTime, currentDownloadTime);
-        return IsStaticMedia(m_mpdFile) ? "Live_Media_BOS" : "Media_BOS";
+        return !IsStaticMedia(m_mpdFile) ? "Live_Media_BOS" : "Media_BOS";
     }
     else if (!IsStaticMedia(m_mpdFile) && latestDownloadTime <= currentDownloadTime)
     {
         LOGMSG_INFO("Media_EOS %s latestDownloadTime: %lu downloadTime: %lu", IsStaticMedia(m_mpdFile) ? "VOD" : "Live", latestDownloadTime, currentDownloadTime);
-        return IsStaticMedia(m_mpdFile) ? "Live_Media_EOS" : "Media_EOS";
+        return !IsStaticMedia(m_mpdFile) ? "Live_Media_EOS" : "Media_EOS";
     }
     else if (!IsStaticMedia(m_mpdFile) && oldestDownloadTime >= currentDownloadTime)
     {
         LOGMSG_INFO("Media_BOS %s oldestDownloadTime: %lu downloadTime: %lu", IsStaticMedia(m_mpdFile) ? "VOD" : "Live", oldestDownloadTime, currentDownloadTime);
-        return IsStaticMedia(m_mpdFile) ? "Live_Media_BOS" : "Media_BOS";
+        return !IsStaticMedia(m_mpdFile) ? "Live_Media_BOS" : "Media_BOS";
     }
     else
     {
