@@ -747,6 +747,10 @@ dash::mpd::MPD*                             Node::ToMPD                 ()  cons
     {
         mpd->SetMaxSubsegmentDuration(this->GetAttributeValue("maxSubsegmentDuration"));
     }
+    if (this->HasAttribute("publishTime"))
+    {
+        mpd->SetPublishTime(this->GetAttributeValue("publishTime"));
+    }
 
     for(size_t i = 0; i < subNodes.size(); i++)
     {

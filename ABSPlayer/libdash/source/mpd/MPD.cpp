@@ -176,6 +176,14 @@ void                                        MPD::SetMaxSubsegmentDuration       
 {
     this->maxSubsegmentDuration = maxSubsegmentDuration;
 }
+const std::string&                          MPD::GetPublishTime                     ()  const
+{
+    return this->publishTime;
+}
+void                                        MPD::SetPublishTime                     (const std::string& publishTime)
+{
+    this->publishTime = publishTime;
+}
 IBaseUrl*                                   MPD::GetMPDPathBaseUrl                  ()  const
 {
     return this->mpdPathBaseUrl;
