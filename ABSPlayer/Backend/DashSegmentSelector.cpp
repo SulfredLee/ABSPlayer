@@ -218,6 +218,7 @@ void DashSegmentSelector::HandleVideoSegment()
     }
     else
     {
+        msgDVideo->SetErrorMsg(validRtn);
     }
     msgDVideo->SetDownloadTime(m_videoStatus.m_downloadTime);
     SendToManager(msgDVideo);
@@ -265,6 +266,7 @@ void DashSegmentSelector::HandleAudioSegment()
     }
     else
     {
+        msgDAudio->SetErrorMsg(validRtn);
     }
     msgDAudio->SetDownloadTime(m_audioStatus.m_downloadTime);
     SendToManager(msgDAudio);
@@ -1035,16 +1037,23 @@ uint64_t DashSegmentSelector::GetCurrentDownloadTime(uint32_t liveDelayMSec, uin
 {
     if (timeShiftBufferDepthMSec)
         timeShiftBufferDepthMSec -= 5000; // Here we reduce 5 second so that we don't pick the edge
+    uint64_t startMSec = 0; GetDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
+    uint64_t publishTime = 0; GetDateTimeString2MSec(m_mpdFile->GetPublishTime(), publishTime);
     struct timeval curTV;
     struct timezone curTZ;
     gettimeofday(&curTV, &curTZ);
-    uint64_t startMSec = 0; GetDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
+
     LOGMSG_INFO("startMSec: %s %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", m_mpdFile->GetAvailabilityStarttime().c_str(), startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
+    LOGMSG_INFO("startMSec: %s %lu publishTime: %s %lu", m_mpdFile->GetAvailabilityStarttime().c_str(), startMSec, m_mpdFile->GetPublishTime().c_str(), publishTime);
 
     if (startMSec)
         return (static_cast<uint64_t>(curTV.tv_sec) * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec - (GetCurrentTimeZone() * 3600 * 1000);
     else
         return (static_cast<uint64_t>(curTV.tv_sec) * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec;
+    // if (startMSec)
+    //     return publishTime - liveDelayMSec - timeShiftBufferDepthMSec - startMSec;
+    // else
+    //     return publishTime - liveDelayMSec - timeShiftBufferDepthMSec + (GetCurrentTimeZone() * 3600 * 1000);
 }
 
 bool DashSegmentSelector::IsDownloadTimeTooOld(const uint64_t& currentDownloadTime)

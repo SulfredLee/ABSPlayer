@@ -50,6 +50,7 @@ namespace dash
                 const std::string&                          GetSuggestedPresentationDelay   ()  const;
                 const std::string&                          GetMaxSegmentDuration           ()  const;
                 const std::string&                          GetMaxSubsegmentDuration        ()  const;
+                const std::string&                          GetPublishTime                  ()  const;
                 IBaseUrl*                                   GetMPDPathBaseUrl               ()  const;
                 uint32_t                                    GetFetchTime                    ()  const;
 
@@ -75,6 +76,7 @@ namespace dash
                 void    SetSuggestedPresentationDelay   (const std::string& suggestedPresentationDelay);
                 void    SetMaxSegmentDuration           (const std::string& maxSegmentDuration);
                 void    SetMaxSubsegmentDuration        (const std::string& maxSubsegmentDuration);
+                void    SetPublishTime                  (const std::string& publishTime);
                 void    SetMPDPathBaseUrl               (BaseUrl *path);
                 void    SetFetchTime                    (uint32_t fetchTimeInSec);
 
@@ -96,6 +98,7 @@ namespace dash
                 std::string                         suggestedPresentationDelay;
                 std::string                         maxSegmentDuration;
                 std::string                         maxSubsegmentDuration;
+                std::string                         publishTime;
                 BaseUrl                             *mpdPathBaseUrl;
                 uint32_t                            fetchTime;
 
