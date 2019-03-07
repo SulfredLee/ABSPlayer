@@ -119,7 +119,8 @@ class DashSegmentSelector : public SegmentSelector
     bool IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
-    bool GetDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
+    bool GetUTCDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec); // input a UTC date time string
+    bool GetLocalDateTimeString2MSec(std::string timeStr, uint64_t& timeMSec); // input a local date time string
     uint32_t GetSegmentDurationMSec(const SegmentInfo& inDownloadInfo);
     uint32_t GetSegmentTimeMSec(const uint64_t& inTime, const SegmentInfo& inDownloadInfo);
     std::string GetSegmentNumberFromTimeline(dashMediaStatus& mediaStatus, const SegmentInfo& segmentInfo);
