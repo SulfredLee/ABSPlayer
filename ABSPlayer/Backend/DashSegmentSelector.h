@@ -3,6 +3,7 @@
 #include "SegmentSelector.h"
 #include "DefaultMutex.h"
 #include "PlayerMsg_Factory.h"
+#include "ServerTimeSynHelper.h"
 
 #include "IMPD.h"
 #include "libdash.h"
@@ -146,6 +147,7 @@ class DashSegmentSelector : public SegmentSelector
     bool IsDownloadTimeTooOld(const uint64_t& currentDownloadTime);
     bool IsDownloadTimeTooEarly(const uint64_t& currentDownloadTime);
     std::string IsDownloadTimeValid(const uint64_t& currentDownloadTime);
+    void UpdateMPDStaticInfo();
 
     // Tools
     bool ReplaceSubstring(std::string& str, const std::string& from, const std::string& to);
@@ -161,6 +163,7 @@ class DashSegmentSelector : public SegmentSelector
     dashMediaStatus m_audioStatus;
     dashMediaStatus m_subtitleStatus;
     PlayerMsg_Factory m_msgFactory;
+    ServerTimeSynHelper m_serverTimeSynHelper;
     int m_trickScale;
 };
 

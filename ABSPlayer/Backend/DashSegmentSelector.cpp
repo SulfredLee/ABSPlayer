@@ -28,9 +28,7 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
     m_mpdFile = msg->GetAndMoveMPDFile();
     m_mpdFileURL = msg->GetURL();
 
-    // update status
-    GetMediaDuration(m_videoStatus.m_mediaStartTime, m_videoStatus.m_mediaEndTime);
-    GetMediaDuration(m_audioStatus.m_mediaStartTime, m_audioStatus.m_mediaEndTime);
+    UpdateMPDStaticInfo();
 
     if (!IsStaticMedia(m_mpdFile))
         HandleDynamicMPDRefresh();
@@ -40,6 +38,10 @@ void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_DownloadMPD> msg)
 void DashSegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_RefreshMPD> msg)
 {
     m_mpdFile = msg->GetAndMoveMPDFile();
+    m_mpdFileURL = msg->GetURL();
+
+    UpdateMPDStaticInfo();
+
     HandleDynamicMPDRefresh();
 }
 
@@ -1063,19 +1065,11 @@ uint64_t DashSegmentSelector::GetCurrentDownloadTime(uint32_t liveDelayMSec, uin
     if (timeShiftBufferDepthMSec)
         timeShiftBufferDepthMSec -= 5000; // Here we reduce 5 second so that we don't pick the edge
     uint64_t startMSec = 0; GetUTCDateTimeString2MSec(m_mpdFile->GetAvailabilityStarttime(), startMSec);
-    uint64_t publishTime = 0; GetUTCDateTimeString2MSec(m_mpdFile->GetPublishTime(), publishTime);
-    struct timeval curTV;
-    struct timezone curTZ;
-    gettimeofday(&curTV, &curTZ);
+    uint64_t currentTimeMSec = m_serverTimeSynHelper.Get_UTC_Time();
 
-    LOGMSG_INFO("startMSec: %s %lu currentTime: %lu tz_minuteswest: %d tz_dsttime: %d", m_mpdFile->GetAvailabilityStarttime().c_str(), startMSec, static_cast<uint64_t>((curTV.tv_sec * 1000 + curTV.tv_usec / 1000.0) + 0.5), curTZ.tz_minuteswest, curTZ.tz_dsttime);
-    LOGMSG_INFO("startMSec: %s %lu publishTime: %s %lu", m_mpdFile->GetAvailabilityStarttime().c_str(), startMSec, m_mpdFile->GetPublishTime().c_str(), publishTime);
+    LOGMSG_INFO("startMSec: %s %lu currentTime: %lu", m_mpdFile->GetAvailabilityStarttime().c_str(), startMSec, currentTimeMSec);
 
-    return (static_cast<uint64_t>(curTV.tv_sec) * 1000 + curTV.tv_usec / 1000.0) + 0.5 - liveDelayMSec - timeShiftBufferDepthMSec - startMSec;
-    // if (startMSec)
-    //     return publishTime - liveDelayMSec - timeShiftBufferDepthMSec - startMSec;
-    // else
-    //     return publishTime - liveDelayMSec - timeShiftBufferDepthMSec + (GetCurrentTimeZone() * 3600 * 1000);
+    return currentTimeMSec - liveDelayMSec - timeShiftBufferDepthMSec - startMSec;
 }
 
 bool DashSegmentSelector::IsDownloadTimeTooOld(const uint64_t& currentDownloadTime)
@@ -1138,4 +1132,12 @@ std::string DashSegmentSelector::IsDownloadTimeValid(const uint64_t& currentDown
     {
         return "";
     }
+}
+
+void DashSegmentSelector::UpdateMPDStaticInfo()
+{
+    // update static status
+    m_serverTimeSynHelper.UpdateServerUTCTime(m_mpdFile->GetPublishTime());
+    GetMediaDuration(m_videoStatus.m_mediaStartTime, m_videoStatus.m_mediaEndTime);
+    GetMediaDuration(m_audioStatus.m_mediaStartTime, m_audioStatus.m_mediaEndTime);
 }
