@@ -19,6 +19,7 @@ class PlayerMsg_DownloadMPD : public PlayerMsg_DownloadFile
     void SetMPDFile(dash::mpd::IMPD* mpdFile);
     void SetMPDFile(std::shared_ptr<dash::mpd::IMPD> mpdFile);
     std::shared_ptr<dash::mpd::IMPD> GetAndMoveMPDFile();
+    std::shared_ptr<dash::mpd::IMPD> GetMPDFile();
     bool IsMPDFileEmpty();
  private:
     std::shared_ptr<dash::mpd::IMPD> m_mpdFile;

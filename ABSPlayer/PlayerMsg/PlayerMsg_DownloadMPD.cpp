@@ -33,6 +33,11 @@ std::shared_ptr<dash::mpd::IMPD> PlayerMsg_DownloadMPD::GetAndMoveMPDFile()
     return std::move(m_mpdFile);
 }
 
+std::shared_ptr<dash::mpd::IMPD> PlayerMsg_DownloadMPD::GetMPDFile()
+{
+    return m_mpdFile;
+}
+
 bool PlayerMsg_DownloadMPD::IsMPDFileEmpty()
 {
     return m_mpdFile == nullptr ? true : false;

@@ -13,6 +13,7 @@
 #include "PlayerMsg_Factory.h"
 #include "MsgCounter.h"
 #include "ErrorHandler.h"
+#include "DashSegmentInfoGreper.h"
 
 #include <memory>
 
@@ -61,6 +62,7 @@ class ABSPlayerManager : public LinuxThread, public CmdReceiver
     MsgCounter m_processMsgCounter;
     MsgCounter m_cmdMsgCounter;
     ErrorHandler m_errorHandler;
+    DashSegmentInfoGreper m_dashSegmentInfoGreper;
 };
 
 #endif
