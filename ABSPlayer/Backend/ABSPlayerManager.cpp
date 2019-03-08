@@ -209,11 +209,18 @@ void ABSPlayerManager::ProcessMsg(SmartPointer<PlayerMsg_DownloadMPD> msg)
     }
     else
     {
-        // update status
-        PlayerStage stage = PlayerStage_Open_Finish;
-        m_playerStatus.ProcessStatusCMD(StatusCMD_Set_Stage, static_cast<void*>(&stage));
+        if (m_dashSegmentInfoGreper.IsHasSegmentTemplate(msg->GetMPDFile()))
+        {
+            // update status
+            PlayerStage stage = PlayerStage_Open_Finish;
+            m_playerStatus.ProcessStatusCMD(StatusCMD_Set_Stage, static_cast<void*>(&stage));
 
-        SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msg));
+            SendToSegmentSelector(StaticCast<PlayerMsg_Base>(msg));
+        }
+        else
+        {
+            LOGMSG_INFO("There is init data in mp4, No support yet.");
+        }
     }
 }
 

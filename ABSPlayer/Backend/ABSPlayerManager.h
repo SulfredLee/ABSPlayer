@@ -14,6 +14,7 @@
 #include "MsgCounter.h"
 #include "ErrorHandler.h"
 #include "SmartPointer.h"
+#include "DashSegmentInfoGreper.h"
 
 
 class ABSPlayerManager : public LinuxThread, public CmdReceiver
@@ -61,6 +62,7 @@ class ABSPlayerManager : public LinuxThread, public CmdReceiver
     MsgCounter m_processMsgCounter;
     MsgCounter m_cmdMsgCounter;
     ErrorHandler m_errorHandler;
+    DashSegmentInfoGreper m_dashSegmentInfoGreper;
 };
 
 #endif

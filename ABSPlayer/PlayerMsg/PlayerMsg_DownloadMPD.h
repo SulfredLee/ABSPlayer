@@ -19,6 +19,7 @@ class PlayerMsg_DownloadMPD : public PlayerMsg_DownloadFile
     void SetMPDFile(dash::mpd::IMPD* mpdFile);
     void SetMPDFile(SmartPointer<dash::mpd::IMPD> mpdFile);
     SmartPointer<dash::mpd::IMPD> GetAndMoveMPDFile();
+    SmartPointer<dash::mpd::IMPD> GetMPDFile();
     bool IsMPDFileEmpty();
  private:
     SmartPointer<dash::mpd::IMPD> m_mpdFile;

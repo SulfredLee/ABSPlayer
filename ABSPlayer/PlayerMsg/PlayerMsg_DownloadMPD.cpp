@@ -33,6 +33,11 @@ SmartPointer<dash::mpd::IMPD> PlayerMsg_DownloadMPD::GetAndMoveMPDFile()
     return std::move(m_mpdFile);
 }
 
+SmartPointer<dash::mpd::IMPD> PlayerMsg_DownloadMPD::GetMPDFile()
+{
+    return m_mpdFile;
+}
+
 bool PlayerMsg_DownloadMPD::IsMPDFileEmpty()
 {
     return m_mpdFile.Get() == nullptr ? true : false;
