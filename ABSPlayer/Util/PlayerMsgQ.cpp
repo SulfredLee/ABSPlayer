@@ -10,7 +10,9 @@ PlayerMsgQ::PlayerMsgQ()
 
 PlayerMsgQ::~PlayerMsgQ()
 {
+    LOGMSG_INFO("Start OUT");
     pthread_cond_destroy(&m_cond);
+    LOGMSG_INFO("OUT");
 }
 
 void PlayerMsgQ::InitComponent(size_t totalMsgSizeLimit)

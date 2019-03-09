@@ -7,11 +7,13 @@ SegmentSelector::SegmentSelector()
 
 SegmentSelector::~SegmentSelector()
 {
+    LOGMSG_INFO("Start OUT");
     m_eventTimer.DeinitComponent();
     stopThread();
     std::shared_ptr<PlayerMsg_Dummy> msgDummy = std::make_shared<PlayerMsg_Dummy>();
     m_msgQ.AddMsg(std::static_pointer_cast<PlayerMsg_Base>(msgDummy));
     joinThread();
+    LOGMSG_INFO("OUT");
 }
 
 void SegmentSelector::ProcessMsg(std::shared_ptr<PlayerMsg_Base> msg)

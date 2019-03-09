@@ -7,6 +7,7 @@ MsgCounter::MsgCounter()
 
 MsgCounter::~MsgCounter()
 {
+    LOGMSG_INFO("Start OUT");
     stopThread();
     joinThread();
     LOGMSG_INFO("OUT");
@@ -37,10 +38,10 @@ void* MsgCounter::Main()
     int loopCount = 0;
     while(isThreadRunning())
     {
-        while (loopCount < 10)
+        while (loopCount < 500) // wait for 5 second
         {
             if (!isThreadRunning()) break;
-            usleep(500000);
+            usleep(1000);
             loopCount++;
         }
         loopCount = 0;

@@ -13,6 +13,7 @@ ABSPlayerManager::ABSPlayerManager()
 
 ABSPlayerManager::~ABSPlayerManager()
 {
+    LOGMSG_INFO("Start OUT");
     m_segmentSelector = nullptr;
     m_mpdDownloader.DeinitComponent();
     m_videoDownloader.DeinitComponent();
