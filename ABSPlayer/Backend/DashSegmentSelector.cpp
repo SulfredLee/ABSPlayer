@@ -835,12 +835,6 @@ std::string DashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStat
 {
     if (targetInfo.isHasSegmentTemplate)
     {
-        // check if EOS or BOS
-        if (IsEOS(mediaStatus.m_downloadTime, mediaStatus))
-            return "Media_EOS";
-        if (IsBOS(mediaStatus.m_downloadTime, mediaStatus))
-            return "Media_BOS";
-
         std::string mediaStr = targetInfo.SegmentTemplate.media;
         ReplaceAllSubstring(mediaStr, "$RepresentationID$", targetInfo.Representation.id);
 
