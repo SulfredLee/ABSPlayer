@@ -34,6 +34,7 @@ struct MPD_SegmentTemplate
     uint32_t startNumber;
     uint32_t timescale;
     uint32_t duration;
+    uint64_t presentationTimeOffset; // MSec
     std::string media;
     std::string initialization;
     std::vector<uint64_t> SegmentTimeline;

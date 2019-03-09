@@ -614,6 +614,7 @@ void DashSegmentSelector::GetSegmentInfo_Base(const SegmentCriteria& criteria, S
         if (isCorrectPeriod)
         {
             GetSegmentInfo_Period(criteria, period, resultInfo, accumulatePeriodDuration);
+            break;
         }
         accumulatePeriodDuration += durationTimeMSec;
     }
@@ -778,6 +779,7 @@ SegmentInfo DashSegmentSelector::GetSegmentInfo_priv(dash::mpd::IPeriod* period,
         resultInfo.SegmentTemplate.timescale = segmentTemplate->GetTimescale();
         resultInfo.SegmentTemplate.duration = segmentTemplate->GetDuration();
         resultInfo.SegmentTemplate.initialization = segmentTemplate->Getinitialization();
+        resultInfo.SegmentTemplate.presentationTimeOffset = segmentTemplate->GetPresentationTimeOffset() * 1000;
         resultInfo.isHasSegmentTemplate = true;
     }
     else
@@ -841,7 +843,7 @@ std::string DashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStat
         if (mediaStr.find("$Number") != std::string::npos)
         {
             // get next segment number
-            mediaStatus.m_numberSegment = (mediaStatus.m_downloadTime - targetInfo.Period.periodStartTime) / GetSegmentDurationMSec(targetInfo);
+            mediaStatus.m_numberSegment = (mediaStatus.m_downloadTime - targetInfo.Period.periodStartTime - targetInfo.SegmentTemplate.presentationTimeOffset) / GetSegmentDurationMSec(targetInfo);
             mediaStatus.m_numberSegment += targetInfo.SegmentTemplate.startNumber;
 
             HandleStringFormat(mediaStr, mediaStatus.m_numberSegment, "$Number"); // $Number%06$
@@ -892,7 +894,7 @@ std::string DashSegmentSelector::GetSegmentURL_Dynamic(dashMediaStatus& mediaSta
         if (mediaStr.find("$Number") != std::string::npos)
         {
             // get next segment number
-            mediaStatus.m_numberSegment = (mediaStatus.m_downloadTime - targetInfo.Period.periodStartTime) / GetSegmentDurationMSec(targetInfo);
+            mediaStatus.m_numberSegment = (mediaStatus.m_downloadTime - targetInfo.Period.periodStartTime - targetInfo.SegmentTemplate.presentationTimeOffset) / GetSegmentDurationMSec(targetInfo);
             mediaStatus.m_numberSegment += targetInfo.SegmentTemplate.startNumber;
 
             HandleStringFormat(mediaStr, mediaStatus.m_numberSegment, "$Number"); // $Number%06$
