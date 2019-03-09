@@ -7,11 +7,13 @@ SegmentSelector::SegmentSelector()
 
 SegmentSelector::~SegmentSelector()
 {
+    LOGMSG_INFO("Start OUT");
     m_eventTimer.DeinitComponent();
     stopThread();
     SmartPointer<PlayerMsg_Dummy> msgDummy = MakeSmartPointer<PlayerMsg_Dummy>();
     m_msgQ.AddMsg(StaticCast<PlayerMsg_Base>(msgDummy));
     joinThread();
+    LOGMSG_INFO("OUT");
 }
 
 void SegmentSelector::ProcessMsg(SmartPointer<PlayerMsg_Base> msg)

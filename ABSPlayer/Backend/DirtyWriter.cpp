@@ -11,6 +11,7 @@ DirtyWriter::DirtyWriter()
 
 DirtyWriter::~DirtyWriter()
 {
+    LOGMSG_INFO("Start OUT");
     stopThread();
     m_msgQ.AddMsg(m_msgFactory.CreateMsg(PlayerMsg_Type_Dummy));
     joinThread();
