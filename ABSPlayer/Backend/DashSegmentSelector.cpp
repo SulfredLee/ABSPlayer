@@ -180,6 +180,8 @@ void DashSegmentSelector::InitStatus(dashMediaStatus& status)
 
 void DashSegmentSelector::HandleVideoSegment()
 {
+    LOGMSG_INFO("Download time: %lu", m_videoStatus.m_downloadTime);
+
     std::string validRtn = IsDownloadTimeValid(m_videoStatus.m_downloadTime);
     std::shared_ptr<PlayerMsg_DownloadFile> msgDVideo = std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadVideo));
     msgDVideo->SetErrorMsg(validRtn);
@@ -227,6 +229,8 @@ void DashSegmentSelector::HandleVideoSegment()
 
 void DashSegmentSelector::HandleAudioSegment()
 {
+    LOGMSG_INFO("Download time: %lu", m_audioStatus.m_downloadTime);
+
     std::string validRtn = IsDownloadTimeValid(m_audioStatus.m_downloadTime);
     std::shared_ptr<PlayerMsg_DownloadFile> msgDAudio = std::dynamic_pointer_cast<PlayerMsg_DownloadFile>(m_msgFactory.CreateMsg(PlayerMsg_Type_DownloadAudio));
     msgDAudio->SetErrorMsg(validRtn);
@@ -585,7 +589,6 @@ void DashSegmentSelector::GetSegmentInfo_Base(const SegmentCriteria& criteria, S
             GetTimeString2MSec(period->GetDuration(), durationTimeMSec);
             if (accumulatePeriodDuration <= criteria.downloadTime && criteria.downloadTime < accumulatePeriodDuration + durationTimeMSec) // select correct period
                 isCorrectPeriod = true;
-            accumulatePeriodDuration += durationTimeMSec;
         }
         else if (period->GetStart().length()) // handle with start case
         {
@@ -610,26 +613,27 @@ void DashSegmentSelector::GetSegmentInfo_Base(const SegmentCriteria& criteria, S
 
         if (isCorrectPeriod)
         {
-            GetSegmentInfo_Period(criteria, period, resultInfo);
+            GetSegmentInfo_Period(criteria, period, resultInfo, accumulatePeriodDuration);
         }
+        accumulatePeriodDuration += durationTimeMSec;
     }
 
     LOGMSG_INFO("selected bandwidth: %u representation id: %s", resultInfo.Representation.bandwidth, resultInfo.Representation.id.c_str());
 }
 
-void DashSegmentSelector::GetSegmentInfo_Period(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, SegmentInfo& resultInfo)
+void DashSegmentSelector::GetSegmentInfo_Period(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, SegmentInfo& resultInfo, const uint64_t& periodStartTime)
 {
     LOGMSG_INFO("IN period id: %s", period->GetId().c_str());
     std::vector<dash::mpd::IAdaptationSet *> adaptationsSets = period->GetAdaptationSets();
     for (size_t j = 0; j < adaptationsSets.size(); j++) // loop for every adaptation set
     {
         dash::mpd::IAdaptationSet* adaptationSet = adaptationsSets[j];
-        GetSegmentInfo_AdaptationSet(criteria, period, adaptationSet, resultInfo);
+        GetSegmentInfo_AdaptationSet(criteria, period, adaptationSet, resultInfo, periodStartTime);
     }
     LOGMSG_DEBUG("OUT");
 }
 
-void DashSegmentSelector::GetSegmentInfo_AdaptationSet(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo)
+void DashSegmentSelector::GetSegmentInfo_AdaptationSet(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo, const uint64_t& periodStartTime)
 {
     LOGMSG_DEBUG("IN");
     std::string mimeType = GetMimeType(adaptationSet);
@@ -656,13 +660,13 @@ void DashSegmentSelector::GetSegmentInfo_AdaptationSet(const SegmentCriteria& cr
 
         if (isCorrectAdaptationSet)
         {
-            GetSegmentInfo_Representation(criteria, period, adaptationSet, resultInfo);
+            GetSegmentInfo_Representation(criteria, period, adaptationSet, resultInfo, periodStartTime);
         }
     }
     LOGMSG_DEBUG("OUT");
 }
 
-void DashSegmentSelector::GetSegmentInfo_Representation(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo)
+void DashSegmentSelector::GetSegmentInfo_Representation(const SegmentCriteria& criteria, dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, SegmentInfo& resultInfo, const uint64_t& periodStartTime)
 {
     LOGMSG_DEBUG("IN");
     uint32_t selectedDownloadSize = 0;
@@ -682,22 +686,22 @@ void DashSegmentSelector::GetSegmentInfo_Representation(const SegmentCriteria& c
             if (selectedDownloadSize < segmentSize && segmentSize < criteria.downloadSize) // if bandwidth is sutiable
             {
                 selectedDownloadSize = segmentSize;
-                resultInfo = GetSegmentInfo_priv(period, adaptationSet, segmentTemplate, representation);
+                resultInfo = GetSegmentInfo_priv(period, adaptationSet, segmentTemplate, representation, periodStartTime);
             }
             if (lowestQualityInfo.Representation.bandwidth > bandwidth)
             {
-                lowestQualityInfo = GetSegmentInfo_priv(period, adaptationSet, segmentTemplate, representation);
+                lowestQualityInfo = GetSegmentInfo_priv(period, adaptationSet, segmentTemplate, representation, periodStartTime);
             }
             if (highestQualityInfo.Representation.bandwidth < bandwidth)
             {
-                highestQualityInfo = GetSegmentInfo_priv(period, adaptationSet, segmentTemplate, representation);
+                highestQualityInfo = GetSegmentInfo_priv(period, adaptationSet, segmentTemplate, representation, periodStartTime);
             }
         }
         else
         {
             if (highestQualityInfo.Representation.bandwidth < bandwidth)
             {
-                highestQualityInfo = GetSegmentInfo_priv(period, adaptationSet, segmentTemplate, representation);
+                highestQualityInfo = GetSegmentInfo_priv(period, adaptationSet, segmentTemplate, representation, periodStartTime);
             }
         }
     }
@@ -733,11 +737,12 @@ void DashSegmentSelector::GetMediaDuration(uint64_t& startTime, uint64_t& endTim
 
     if (m_mpdFile->GetMediaPresentationDuration().length())
     {
+        startTime = 0;
         GetTimeString2MSec(m_mpdFile->GetMediaPresentationDuration(), endTime);
     }
 }
 
-SegmentInfo DashSegmentSelector::GetSegmentInfo_priv(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation)
+SegmentInfo DashSegmentSelector::GetSegmentInfo_priv(dash::mpd::IPeriod* period, dash::mpd::IAdaptationSet* adaptationSet, dash::mpd::ISegmentTemplate* segmentTemplate, dash::mpd::IRepresentation* representation, const uint64_t& periodStartTime)
 {
     SegmentInfo resultInfo;
 
@@ -755,6 +760,7 @@ SegmentInfo DashSegmentSelector::GetSegmentInfo_priv(dash::mpd::IPeriod* period,
     resultInfo.Period.duration = period->GetDuration();
     resultInfo.Period.start = period->GetStart();
     resultInfo.Period.id = period->GetId();
+    resultInfo.Period.periodStartTime = periodStartTime;
     // handle representation
     resultInfo.Representation.bandwidth = representation->GetBandwidth();
     resultInfo.Representation.id = representation->GetId();
@@ -841,7 +847,7 @@ std::string DashSegmentSelector::GetSegmentURL_Static(dashMediaStatus& mediaStat
         if (mediaStr.find("$Number") != std::string::npos)
         {
             // get next segment number
-            mediaStatus.m_numberSegment = mediaStatus.m_downloadTime / GetSegmentDurationMSec(targetInfo);
+            mediaStatus.m_numberSegment = (mediaStatus.m_downloadTime - targetInfo.Period.periodStartTime) / GetSegmentDurationMSec(targetInfo);
             mediaStatus.m_numberSegment += targetInfo.SegmentTemplate.startNumber;
 
             HandleStringFormat(mediaStr, mediaStatus.m_numberSegment, "$Number"); // $Number%06$
@@ -900,7 +906,7 @@ std::string DashSegmentSelector::GetSegmentURL_Dynamic(dashMediaStatus& mediaSta
         if (mediaStr.find("$Number") != std::string::npos)
         {
             // get next segment number
-            mediaStatus.m_numberSegment = mediaStatus.m_downloadTime / GetSegmentDurationMSec(targetInfo);
+            mediaStatus.m_numberSegment = (mediaStatus.m_downloadTime - targetInfo.Period.periodStartTime) / GetSegmentDurationMSec(targetInfo);
             mediaStatus.m_numberSegment += targetInfo.SegmentTemplate.startNumber;
 
             HandleStringFormat(mediaStr, mediaStatus.m_numberSegment, "$Number"); // $Number%06$
