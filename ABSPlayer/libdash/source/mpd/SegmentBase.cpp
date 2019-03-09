@@ -52,11 +52,11 @@ void                SegmentBase::SetTimescale               (uint32_t timescale)
 {
     this->timescale = timescale;
 }
-uint32_t            SegmentBase::GetPresentationTimeOffset  ()  const
+uint64_t            SegmentBase::GetPresentationTimeOffset  ()  const
 {
     return this->presentationTimeOffset;
 }
-void                SegmentBase::SetPresentationTimeOffset  (uint32_t presentationTimeOffset)
+void                SegmentBase::SetPresentationTimeOffset  (uint64_t presentationTimeOffset)
 {
     this->presentationTimeOffset = presentationTimeOffset;
 }

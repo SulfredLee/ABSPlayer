@@ -31,14 +31,14 @@ namespace dash
                 const IURLType*     GetInitialization           ()  const;
                 const IURLType*     GetRepresentationIndex      ()  const;
                 uint32_t            GetTimescale                ()  const;
-                uint32_t            GetPresentationTimeOffset   ()  const;
+                uint64_t            GetPresentationTimeOffset   ()  const;
                 const std::string&  GetIndexRange               ()  const;
                 bool                HasIndexRangeExact          ()  const;
 
                 void    SetInitialization           (URLType *initialization);
                 void    SetRepresentationIndex      (URLType *representationIndex);
                 void    SetTimescale                (uint32_t timescale);
-                void    SetPresentationTimeOffset   (uint32_t presentationTimeOffset);
+                void    SetPresentationTimeOffset   (uint64_t presentationTimeOffset);
                 void    SetIndexRange               (const std::string& indexRange);
                 void    SetIndexRangeExact          (bool indexRangeExact);
 
@@ -46,7 +46,7 @@ namespace dash
                 URLType     *initialization;
                 URLType     *representationIndex;
                 uint32_t    timescale;
-                uint32_t    presentationTimeOffset;
+                uint64_t    presentationTimeOffset;
                 std::string indexRange;
                 bool        indexRangeExact;
         };

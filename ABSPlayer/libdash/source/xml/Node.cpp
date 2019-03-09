@@ -972,7 +972,7 @@ void                                        Node::SetCommonValuesForSeg (dash::m
     }
     if (this->HasAttribute("presentationTimeOffset"))
     {
-        object.SetPresentationTimeOffset(strtoul(this->GetAttributeValue("presentationTimeOffset").c_str(), NULL, 10));
+        object.SetPresentationTimeOffset(strtoull(this->GetAttributeValue("presentationTimeOffset").c_str(), NULL, 10));
     }
     if (this->HasAttribute("indexRange"))
     {

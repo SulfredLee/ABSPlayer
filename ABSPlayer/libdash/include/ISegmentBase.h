@@ -63,7 +63,7 @@ namespace dash
                  *  If not present on any level, the value of the presentation time offset is 0. 
                  *  @return     an unsigned integer
                  */
-                virtual uint32_t            GetPresentationTimeOffset   ()  const = 0;
+                virtual uint64_t            GetPresentationTimeOffset   ()  const = 0;
 
                 /**
                  *  Returns a string that specifies the byte range that contains the Segment Index in all Media Segments of the Representation.\n
