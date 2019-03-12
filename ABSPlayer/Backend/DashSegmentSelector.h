@@ -118,7 +118,7 @@ class DashSegmentSelector : public SegmentSelector
 
     // video and audio
     uint32_t GetTargetDownloadSize(const dashMediaStatus& mediaStatus, std::string mediaType);
-    std::vector<uint64_t> GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate);
+    std::vector<uint64_t> GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate, const std::string& periodID);
     bool IsEOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool IsBOS(const uint64_t& nextDownloadTime, const dashMediaStatus& inMediaStatus);
     bool GetTimeString2MSec(std::string timeStr, uint64_t& timeMSec);
@@ -146,6 +146,7 @@ class DashSegmentSelector : public SegmentSelector
     std::string GetMimeType(dash::mpd::IAdaptationSet* adaptationSet);
     int32_t GetCurrentTimeZone();
     uint64_t GetCurrentDownloadTime(uint32_t liveDelayMSec, uint32_t timeShiftBufferDepthMSec = 0);
+    uint64_t GetPeriodDuration(const std::string& periodID);
     bool IsDownloadTimeTooOld(const uint64_t& currentDownloadTime);
     bool IsDownloadTimeTooEarly(const uint64_t& currentDownloadTime);
     std::string IsDownloadTimeValid(const uint64_t& currentDownloadTime);
