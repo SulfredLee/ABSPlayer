@@ -460,7 +460,7 @@ bool DashSegmentSelector::GetLocalDateTimeString2MSec(std::string timeStr, uint6
     }
 }
 
-std::vector<uint64_t> DashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate)
+std::vector<uint64_t> DashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmentTemplate* segmentTemplate, const std::string& periodID)
 {
     std::vector<uint64_t> result;
     dash::mpd::ISegmentTimeline const * SegmentTimeline = segmentTemplate->GetSegmentTimeline();
@@ -472,21 +472,25 @@ std::vector<uint64_t> DashSegmentSelector::GetSegmentTimeline(dash::mpd::ISegmen
             uint64_t startTime = timeline[i]->GetStartTime();
             uint32_t duration = timeline[i]->GetDuration();
             uint32_t repeatCount = timeline[i]->GetRepeatCount();
-            if (i == 0)
+
+            if (static_cast<int>(repeatCount) == -1)
             {
-                result.push_back(startTime);
-                result.push_back(startTime + duration);
-                LOGMSG_DEBUG("time: %lu time: %lu", result[0], result[1]);
+                if (!duration) duration = 1;
+                if (i + 1 < timeline.size() && timeline[i + 1]->GetStartTime())
+                {
+                    uint64_t repeateEndTime = timeline[i + 1]->GetStartTime();
+                    repeatCount = static_cast<uint32_t>((repeateEndTime - startTime) / duration);
+                }
+                else
+                {
+                    repeatCount = static_cast<uint32_t>(GetPeriodDuration(periodID) / duration);
+                }
             }
-            else
+
+            if (startTime) result.push_back(startTime);
+            for (uint32_t j = 0; j <= repeatCount; j++)
             {
-                result.push_back(result.back() + duration);
-                LOGMSG_DEBUG("time: %lu", result.back());
-            }
-            for (uint32_t j = 0; j < repeatCount; j++)
-            {
-                result.push_back(result.back() + duration);
-                LOGMSG_DEBUG("time: %lu", result.back());
+                if (duration && result.size()) result.push_back(result.back() + duration);
             }
         }
     }
@@ -683,7 +687,9 @@ void DashSegmentSelector::GetSegmentInfo_Representation(const SegmentCriteria& c
 
         if (segmentTemplate)
         {
-            uint32_t segmentSize = bandwidth * static_cast<double>(segmentTemplate->GetDuration()) / segmentTemplate->GetTimescale();
+            uint32_t timescale = segmentTemplate->GetTimescale();
+            if (!timescale) timescale = 1;
+            uint32_t segmentSize = bandwidth * static_cast<double>(segmentTemplate->GetDuration()) / timescale;
             if (selectedDownloadSize < segmentSize && segmentSize < criteria.downloadSize) // if bandwidth is sutiable
             {
                 selectedDownloadSize = segmentSize;
@@ -725,15 +731,21 @@ void DashSegmentSelector::GetMediaDuration(uint64_t& startTime, uint64_t& endTim
     for (size_t i = 0; i < periods.size(); i++)
     {
         dash::mpd::IPeriod* period = periods[i];
-        uint64_t durationtimeMSec = 0;
+        uint64_t tempStart = 0; uint64_t duration = 0;
 
         // handle start time
-        GetTimeString2MSec(period->GetStart(), durationtimeMSec);
-        if (startTime > durationtimeMSec)
-            startTime = durationtimeMSec;
+        GetTimeString2MSec(period->GetStart(), tempStart);
+        if (startTime > tempStart)
+        {
+            startTime = tempStart;
+            endTime = startTime;
+        }
         // handle end time
-        GetTimeString2MSec(period->GetDuration(), durationtimeMSec);
-        endTime += durationtimeMSec;
+        GetTimeString2MSec(period->GetDuration(), duration);
+        if (!duration)
+            endTime = startTime;
+        else
+            endTime += duration;
     }
 
     if (m_mpdFile->GetMediaPresentationDuration().length())
@@ -774,7 +786,7 @@ SegmentInfo DashSegmentSelector::GetSegmentInfo_priv(dash::mpd::IPeriod* period,
     {
         resultInfo.SegmentTemplate.media = segmentTemplate->Getmedia();
         if (resultInfo.SegmentTemplate.media.find("Time") != std::string::npos)
-            resultInfo.SegmentTemplate.SegmentTimeline = GetSegmentTimeline(segmentTemplate);
+            resultInfo.SegmentTemplate.SegmentTimeline = GetSegmentTimeline(segmentTemplate, period->GetId());
         resultInfo.SegmentTemplate.startNumber = segmentTemplate->GetStartNumber();
         resultInfo.SegmentTemplate.timescale = segmentTemplate->GetTimescale();
         resultInfo.SegmentTemplate.duration = segmentTemplate->GetDuration();
@@ -1142,4 +1154,27 @@ void DashSegmentSelector::UpdateMPDStaticInfo()
     m_serverTimeSynHelper.UpdateServerUTCTime(m_mpdFile->GetPublishTime());
     GetMediaDuration(m_videoStatus.m_mediaStartTime, m_videoStatus.m_mediaEndTime);
     GetMediaDuration(m_audioStatus.m_mediaStartTime, m_audioStatus.m_mediaEndTime);
+}
+
+uint64_t DashSegmentSelector::GetPeriodDuration(const std::string& periodID)
+{
+    std::vector<dash::mpd::IPeriod *> periods = m_mpdFile->GetPeriods();
+    for (size_t i = 0; i < periods.size(); i++)
+    {
+        dash::mpd::IPeriod* period = periods[i];
+        if (periodID == period->GetId())
+        {
+            if (i + 1 < periods.size())
+            {
+                uint64_t nextStart = 0;
+                uint64_t curStart = 0;
+                GetTimeString2MSec(period->GetStart(), curStart);
+                GetTimeString2MSec(periods[i + 1]->GetStart(), nextStart);
+                return nextStart - curStart;
+            }
+            else
+                return 0;
+        }
+    }
+    return 0;
 }
