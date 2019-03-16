@@ -5,7 +5,8 @@
 #include <ctime>
 #include <stdio.h>
 
-#define LIVE_TIME_LAG 3000 // 3 sec time lagging for live video
+#define LIVE_TIME_LAG 25000 // 25 sec time lagging for live video, we will start to download live moive at this time delay
+#define LIVE_TIME_CUSHION 3000 // 3 sec time lagging for live video, we will send EOS when downloading live movie at this time delay
 DashSegmentSelector::DashSegmentSelector()
 {
     m_mpdFile = nullptr;
@@ -743,9 +744,9 @@ void DashSegmentSelector::GetMediaDuration(uint64_t& startTime, uint64_t& endTim
         // handle end time
         GetTimeString2MSec(period->GetDuration(), duration);
         if (!duration)
-            endTime = startTime;
+            endTime = 0xFFFFFFFFFFFFFFFF;
         else
-            endTime += duration;
+            endTime = tempStart + duration;
     }
 
     if (m_mpdFile->GetMediaPresentationDuration().length())
@@ -1121,7 +1122,7 @@ std::string DashSegmentSelector::IsDownloadTimeValid(const uint64_t& currentDown
     uint64_t mediaStartTime, mediaEndTime; mediaStartTime = mediaEndTime = 0; GetMediaDuration(mediaStartTime, mediaEndTime);
     uint64_t timeShiftBufferDepthMSec = 0; GetTimeString2MSec(m_mpdFile->GetTimeShiftBufferDepth(), timeShiftBufferDepthMSec);
     uint64_t oldestDownloadTime = GetCurrentDownloadTime(0, timeShiftBufferDepthMSec);
-    uint64_t latestDownloadTime = GetCurrentDownloadTime(0, 0);
+    uint64_t latestDownloadTime = GetCurrentDownloadTime(LIVE_TIME_CUSHION, 0);
     if (mediaEndTime && mediaEndTime <= currentDownloadTime)
     {
         LOGMSG_INFO("Media_EOS %s mediaEndTime: %lu downloadTime: %lu", IsStaticMedia(m_mpdFile) ? "VOD" : "Live", mediaEndTime, currentDownloadTime);
