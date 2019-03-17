@@ -38,7 +38,7 @@ class PlayerTimer : public LinuxThread
     void* Main();
  private:
     PlayerMsgQ* m_msgQ;
-    std::map<uint64_t, PlayerTimerEvent> m_eventQ; // key: next event time, value: event content
+    std::multimap<uint64_t, PlayerTimerEvent> m_eventQ; // key: next event time, value: event content
     PlayerMsg_Factory m_msgFactory;
     DefaultMutex m_mutex;
 };
