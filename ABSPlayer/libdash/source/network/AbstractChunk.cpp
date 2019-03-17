@@ -44,10 +44,12 @@ bool    AbstractChunk::StartDownload                ()
 
     this->curl = curl_easy_init();
     curl_easy_setopt(this->curl, CURLOPT_URL, this->AbsoluteURI().c_str());
+    curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYHOST, 0L);
     curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, CurlResponseCallback);
     curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, (void *)this);
     /* Debug Callback */
-    curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(this->curl, CURLOPT_VERBOSE, 0L);
     curl_easy_setopt(this->curl, CURLOPT_DEBUGFUNCTION, CurlDebugCallback);
     curl_easy_setopt(this->curl, CURLOPT_DEBUGDATA, (void *)this);
     curl_easy_setopt(this->curl, CURLOPT_FAILONERROR, true);
