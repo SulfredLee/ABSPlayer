@@ -1,6 +1,8 @@
 debug/
 release/
 build/
+build_7260/
+build_local/
 data/
 third_party/
 data/
